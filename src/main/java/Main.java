@@ -32,8 +32,32 @@ public class Main {
     }
 }
 
-record Data(String name, int age){}
+//record Data(String name, int age){}
+class Data{
+    private String name = null;
+    private int age = 0;
 
+    public Data(String name,int age){
+        this.name = name;
+        this.age = age;
+    }
+
+    public String name(){
+        return name;
+    }
+
+    public int age(){
+        return age;
+    }
+
+    @Override
+    public String toString() {
+        return "Data{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
 
 class Functor1 implements ICallable<Data>{
 
