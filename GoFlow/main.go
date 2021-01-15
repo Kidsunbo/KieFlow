@@ -17,6 +17,7 @@ func SimpleWorkFlow() {
 		For(3, Func7).
 		Parallel(Func9, Func2, Func1, Func6).
 		If(CondTrue, Func2).
+		SetGlobalEndLogger(EndLogger).
 		Wait()
 	fmt.Println(result)
 }

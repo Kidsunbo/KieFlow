@@ -10,6 +10,7 @@ type DataTest struct {
 	Ctx  context.Context
 	Name string
 	Age  int64
+	Pet  []string
 }
 
 type ResultTest struct {
