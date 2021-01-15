@@ -41,7 +41,7 @@ You can do what ever you want to do with the result and data as you wish. If it'
 
 # Usage
 
-A Python3 script is provided for you to generate the code you want.
+Because of Go's lack of generic prior to version 2, a Python3 script is provided for you to generate the code you want.
 
 ```shell
 python3 flow.py --data DataTest 
