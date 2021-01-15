@@ -41,7 +41,7 @@ func OnSuccessAndFailCheck() {
 		Do(Func6).
 		Do(Func7).
 		//Do(Func8).
-		//Do(Func9).
+		Do(Func9).
 		Do(Func1).
 		Do(Func2).
 		Do(Func3).
