@@ -54,7 +54,7 @@ func OnSuccessAndFailCheck() {
 func main() {
 	fmt.Println("Welcome to GoFlow!")
 
-	//SimpleWorkFlow()
-	//NoteCheck()
+	SimpleWorkFlow()
+	NoteCheck()
 	OnSuccessAndFailCheck()
 }

@@ -92,4 +92,23 @@ _ = NewFlow().
     Wait()
 ```
 
+## Success/Fail Handler
+```go
+_ = NewFlow().
+    Do(Func1).
+    Do(Func2).
+    Do(Func3).
+    Do(Func4).
+    Do(Func5).
+    Do(Func6).
+    Do(Func7).
+    Do(Func8).
+    Do(Func9).
+    Do(Func1).
+    Do(Func2).
+    Do(Func3).
+    OnSuccess(OnSuccessHandle).
+    OnFail(OnFailHandle).
+    Wait()
 
+```
