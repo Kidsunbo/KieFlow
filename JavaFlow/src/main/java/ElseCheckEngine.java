@@ -44,7 +44,7 @@ public class ElseCheckEngine<T> {
             nodes.getLast().setNext(node);
         }
         nodes.add(node);
-        return new ElseCheckEngine<T>(data,invoker,result,nodes);
+        return this;
     }
 
     public ElseCheckEngine<T> ElseIf(IBooleanFunc<T> condition, ICallable<T>... functors){
@@ -54,7 +54,7 @@ public class ElseCheckEngine<T> {
             nodes.getLast().setNext(node);
         }
         nodes.add(node);
-        return new ElseCheckEngine<>(data,invoker,result,nodes);
+        return this;
     }
 
 

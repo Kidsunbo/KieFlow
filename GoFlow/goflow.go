@@ -402,3 +402,59 @@ func (c *CheckEngine)Parallel(functors ...ICallable)*CheckEngine{
 func (c *CheckEngine)If(condition IBoolFunc, functors ...ICallable)*
 
 //END CheckEngine
+
+//ElseCheckEngine implementation
+
+type ElseCheckEngine struct{
+	data *_Data
+	nodes *[]IBasicCheckNode
+	result **_Result
+	invoker *CheckEngine
+}
+
+func NewElseCheckEngine(data *_Data, invoker *CheckEngine,result **_Result,nodes *[]IBasicCheckNode)*ElseCheckEngine{
+	res := &ElseCheckEngine{
+		data:   data,
+		nodes:  nodes,
+		result: result,
+		invoker: invoker,
+	}
+	return res
+}
+
+func (c *ElseCheckEngine)Check(functors ...ICallable)*ElseCheckEngine{
+	node := NewNormalNode(c.data,c.result,functors...)
+	if len(*c.nodes) != 0{
+		(*c.nodes)[len(*c.nodes)-1] = node
+	}
+	*c.nodes = append(*c.nodes,node)
+	return c
+}
+
+func (c *ElseCheckEngine)For(times int, functors ...ICallable)*ElseCheckEngine{
+	node := NewForNode(times,c.data,c.result,functors...)
+	if len(*c.nodes) != 0{
+		(*c.nodes)[len(*c.nodes)-1] = node
+	}
+	*c.nodes = append(*c.nodes,node)
+	return c
+}
+
+func (c *ElseCheckEngine)Parallel(functors ...ICallable)*ElseCheckEngine{
+	node := NewParallelNode(c.data,c.result,functors...)
+	if len(*c.nodes) != 0{
+		(*c.nodes)[len(*c.nodes)-1] = node
+	}
+	*c.nodes = append(*c.nodes,node)
+	return c
+}
+
+func (c *ElseCheckEngine)If(condition IBoolFunc, functors ...ICallable)*ElseCheckEngine{
+	node := NewIfNode(c.data,c.result,condition,functors...)
+	if len(*c.nodes) != 0{
+		(*c.nodes)[len(*c.nodes)-1] = node
+	}
+	*c.nodes = append(*c.nodes,node)
+	return c
+}
+//END ElseCheckEngine
