@@ -50,9 +50,7 @@ public class ElseCheckEngine<T> {
     public ElseCheckEngine<T> ElseIf(IBooleanFunc<T> condition, ICallable<T>... functors){
         System.out.println("ElseIf");
         var node = new ElseIfNode<T>(data,result,condition,functors);
-        if(nodes.size()!=0){
-            nodes.getLast().setNext(node);
-        }
+        nodes.getLast().setNext(node);
         nodes.add(node);
         return this;
     }

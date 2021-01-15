@@ -422,31 +422,31 @@ func NewElseCheckEngine(data *_Data, invoker *CheckEngine,result **_Result,nodes
 	return res
 }
 
-func (c *ElseCheckEngine)Check(functors ...ICallable)*ElseCheckEngine{
+func (c *ElseCheckEngine)Check(functors ...ICallable)*CheckEngine{
 	node := NewNormalNode(c.data,c.result,functors...)
 	if len(*c.nodes) != 0{
 		(*c.nodes)[len(*c.nodes)-1] = node
 	}
 	*c.nodes = append(*c.nodes,node)
-	return c
+	return c.invoker
 }
 
-func (c *ElseCheckEngine)For(times int, functors ...ICallable)*ElseCheckEngine{
+func (c *ElseCheckEngine)For(times int, functors ...ICallable)*CheckEngine{
 	node := NewForNode(times,c.data,c.result,functors...)
 	if len(*c.nodes) != 0{
 		(*c.nodes)[len(*c.nodes)-1] = node
 	}
 	*c.nodes = append(*c.nodes,node)
-	return c
+	return c.invoker
 }
 
-func (c *ElseCheckEngine)Parallel(functors ...ICallable)*ElseCheckEngine{
+func (c *ElseCheckEngine)Parallel(functors ...ICallable)*CheckEngine{
 	node := NewParallelNode(c.data,c.result,functors...)
 	if len(*c.nodes) != 0{
 		(*c.nodes)[len(*c.nodes)-1] = node
 	}
 	*c.nodes = append(*c.nodes,node)
-	return c
+	return c.invoker
 }
 
 func (c *ElseCheckEngine)If(condition IBoolFunc, functors ...ICallable)*ElseCheckEngine{
@@ -456,5 +456,12 @@ func (c *ElseCheckEngine)If(condition IBoolFunc, functors ...ICallable)*ElseChec
 	}
 	*c.nodes = append(*c.nodes,node)
 	return c
+}
+
+func (c *ElseCheckEngine)ElseIf(condition IBoolFunc, functors ...ICallable)*ElseCheckEngine{
+	node:= NewElseIfNode(c.data,c.result,condition,functors...)
+	if len(*c.nodes)!=0{
+		
+	}
 }
 //END ElseCheckEngine
