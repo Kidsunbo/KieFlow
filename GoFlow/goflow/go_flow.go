@@ -118,7 +118,9 @@ func (b *BasicFlowNode) Run() {
 	}
 
 	result := b.ImplTask()
-	b.SetParentResult(result)
+	if result!=nil {
+		b.SetParentResult(result)
+	}
 
 	if b.EndLogger != nil {
 		b.EndLogger(b.Note, b.Data, b.GetParentResult())
@@ -215,6 +217,24 @@ func (i *IfNode) ImplTask() *_Result {
 	return i.GetParentResult()
 }
 
+func (i *IfNode) Run() {
+	if i.ShouldSkip || i.GetParentResult().Err != nil || i.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if i.BeginLogger != nil {
+		i.BeginLogger(i.Note, i.Data)
+	}
+
+	result := i.ImplTask()
+	if result!=nil {
+		i.SetParentResult(result)
+	}
+
+	if i.EndLogger != nil {
+		i.EndLogger(i.Note, i.Data, i.GetParentResult())
+	}
+}
+
 //END IfNode
 
 //ElseNode Implementation
@@ -236,6 +256,24 @@ func (e *ElseNode) ImplTask() *_Result {
 	return e.GetParentResult()
 }
 
+func (e *ElseNode) Run() {
+	if e.ShouldSkip || e.GetParentResult().Err != nil || e.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if e.BeginLogger != nil {
+		e.BeginLogger(e.Note, e.Data)
+	}
+
+	result := e.ImplTask()
+	if result!=nil {
+		e.SetParentResult(result)
+	}
+
+	if e.EndLogger != nil {
+		e.EndLogger(e.Note, e.Data, e.GetParentResult())
+	}
+}
+
 //END ElseNode
 
 // ElseIfNode Implementation
@@ -251,8 +289,8 @@ func NewElseIfNode(data *_Data, parentResult **_Result, condition IBoolFunc, fun
 	}
 }
 
-func (i *ElseIfNode) ImplTask() *_Result {
-	if i.Condition == nil {
+func (e *ElseIfNode) ImplTask() *_Result {
+	if e.Condition == nil {
 		return &_Result{
 			Err:        NewConditionNotFoundError(),
 			StatusCode: 0,
@@ -260,22 +298,40 @@ func (i *ElseIfNode) ImplTask() *_Result {
 		}
 	}
 
-	if i.Condition(i.Data) {
-		for _, functor := range i.Functors {
-			result := functor(i.Data)
+	if e.Condition(e.Data) {
+		for _, functor := range e.Functors {
+			result := functor(e.Data)
 			if result.Err != nil || result.StatusCode != 0 {
 				return result
 			}
 		}
 	}
 
-	current := i.Next
+	current := e.Next
 	for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
 		current.SetShouldSkip(true)
 		current = current.GetNext()
 	}
 
-	return i.GetParentResult()
+	return e.GetParentResult()
+}
+
+func (e *ElseIfNode) Run() {
+	if e.ShouldSkip || e.GetParentResult().Err != nil || e.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if e.BeginLogger != nil {
+		e.BeginLogger(e.Note, e.Data)
+	}
+
+	result := e.ImplTask()
+	if result!=nil {
+		e.SetParentResult(result)
+	}
+
+	if e.EndLogger != nil {
+		e.EndLogger(e.Note, e.Data, e.GetParentResult())
+	}
 }
 
 //END ElseIfNode
@@ -289,15 +345,34 @@ func NewNormalNode(data *_Data, parentResult **_Result, functors ...ICallable) *
 	return &ElseNode{NewBasicFlowNode(data, parentResult, NormalNodeType, functors...)}
 }
 
-func (e *NormalNode) ImplTask() *_Result {
-	for _, functor := range e.Functors {
-		result := functor(e.Data)
+func (n *NormalNode) ImplTask() *_Result {
+	for _, functor := range n.Functors {
+		result := functor(n.Data)
 		if result.Err != nil || result.StatusCode != 0 {
 			return result
 		}
 	}
-	return e.GetParentResult()
+	return n.GetParentResult()
 }
+
+func (n *NormalNode) Run() {
+	if n.ShouldSkip || n.GetParentResult().Err != nil || n.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if n.BeginLogger != nil {
+		n.BeginLogger(n.Note, n.Data)
+	}
+
+	result := n.ImplTask()
+	if result!=nil {
+		n.SetParentResult(result)
+	}
+
+	if n.EndLogger != nil {
+		n.EndLogger(n.Note, n.Data, n.GetParentResult())
+	}
+}
+
 
 //END NormalNode
 
@@ -314,16 +389,34 @@ func NewForNode(times int, data *_Data, parentResult **_Result, functors ...ICal
 	}
 }
 
-func (e *ForNode) ImplTask() *_Result {
-	for i := 0; i < e.Times; i++ {
-		for _, functor := range e.Functors {
-			result := functor(e.Data)
+func (f *ForNode) ImplTask() *_Result {
+	for i := 0; i < f.Times; i++ {
+		for _, functor := range f.Functors {
+			result := functor(f.Data)
 			if result.Err != nil || result.StatusCode != 0 {
 				return result
 			}
 		}
 	}
-	return e.GetParentResult()
+	return f.GetParentResult()
+}
+
+func (f *ForNode) Run() {
+	if f.ShouldSkip || f.GetParentResult().Err != nil || f.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if f.BeginLogger != nil {
+		f.BeginLogger(f.Note, f.Data)
+	}
+
+	result := f.ImplTask()
+	if result!=nil{
+		f.SetParentResult(result)
+	}
+
+	if f.EndLogger != nil {
+		f.EndLogger(f.Note, f.Data, f.GetParentResult())
+	}
 }
 
 //END NormalNode
@@ -340,18 +433,18 @@ func NewParallelNode(data *_Data, parentResult **_Result, functors ...ICallable)
 	}
 }
 
-func (e *ParallelNode) ImplTask() *_Result {
-	resultChan := make(chan *_Result, len(e.Functors))
+func (p *ParallelNode) ImplTask() *_Result {
+	resultChan := make(chan *_Result, len(p.Functors))
 
 	wg := sync.WaitGroup{}
-	wg.Add(len(e.Functors))
+	wg.Add(len(p.Functors))
 
 	go func(wg *sync.WaitGroup) {
 		wg.Wait()
 		close(resultChan)
 	}(&wg)
 
-	for _, functor := range e.Functors {
+	for _, functor := range p.Functors {
 		go func(wg *sync.WaitGroup, f ICallable) {
 			defer func() {
 				wg.Done()
@@ -364,12 +457,12 @@ func (e *ParallelNode) ImplTask() *_Result {
 					}
 				}
 			}()
-			result := f(e.Data)
+			result := f(p.Data)
 			resultChan <- result
 		}(&wg, functor)
 	}
 
-	result := e.GetParentResult()
+	result := p.GetParentResult()
 	for item := range resultChan {
 		if result.StatusCode != 0 || result.Err != nil {
 			continue
@@ -378,6 +471,24 @@ func (e *ParallelNode) ImplTask() *_Result {
 	}
 
 	return result
+}
+
+func (p *ParallelNode) Run() {
+	if p.ShouldSkip || p.GetParentResult().Err != nil || p.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if p.BeginLogger != nil {
+		p.BeginLogger(p.Note, p.Data)
+	}
+
+	result := p.ImplTask()
+	if result!=nil{
+		p.SetParentResult(result)
+	}
+
+	if p.EndLogger != nil {
+		p.EndLogger(p.Note, p.Data, p.GetParentResult())
+	}
 }
 
 //END NormalNode
