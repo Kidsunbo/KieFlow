@@ -3,7 +3,7 @@
 
 ------
 
-![Java CI with Gradle](https://github.com/Kidsunbo/JavaFlow/workflows/Java%20CI%20with%20Gradle/badge.svg)
+![Java CI with Gradle](https://github.com/Kidsunbo/KieFlow/workflows/Java%20CI%20with%20Gradle/badge.svg)
 
 Java flow is a library that run bunch of functions composed by the code.
 
