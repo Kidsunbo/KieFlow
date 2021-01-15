@@ -202,7 +202,7 @@ func (i *IfNode) ImplTask() *_Result {
 	if i.Condition(i.Data) {
 		for _, functor := range i.Functors {
 			result := functor(i.Data)
-			if result.Err != nil || result.StatusCode != 0 {
+			if result != nil && (result.Err != nil || result.StatusCode != 0) {
 				return result
 			}
 		}
@@ -249,7 +249,7 @@ func NewElseNode(data *_Data, parentResult **_Result, functors ...ICallable) *El
 func (e *ElseNode) ImplTask() *_Result {
 	for _, functor := range e.Functors {
 		result := functor(e.Data)
-		if result.Err != nil || result.StatusCode != 0 {
+		if result != nil && (result.Err != nil || result.StatusCode != 0) {
 			return result
 		}
 	}
@@ -301,7 +301,7 @@ func (e *ElseIfNode) ImplTask() *_Result {
 	if e.Condition(e.Data) {
 		for _, functor := range e.Functors {
 			result := functor(e.Data)
-			if result.Err != nil || result.StatusCode != 0 {
+			if result != nil && (result.Err != nil || result.StatusCode != 0) {
 				return result
 			}
 		}
@@ -348,7 +348,7 @@ func NewNormalNode(data *_Data, parentResult **_Result, functors ...ICallable) *
 func (n *NormalNode) ImplTask() *_Result {
 	for _, functor := range n.Functors {
 		result := functor(n.Data)
-		if result.Err != nil || result.StatusCode != 0 {
+		if result != nil && (result.Err != nil || result.StatusCode != 0) {
 			return result
 		}
 	}
@@ -393,7 +393,7 @@ func (f *ForNode) ImplTask() *_Result {
 	for i := 0; i < f.Times; i++ {
 		for _, functor := range f.Functors {
 			result := functor(f.Data)
-			if result.Err != nil || result.StatusCode != 0 {
+			if result != nil && (result.Err != nil || result.StatusCode != 0) {
 				return result
 			}
 		}
@@ -464,7 +464,7 @@ func (p *ParallelNode) ImplTask() *_Result {
 
 	result := p.GetParentResult()
 	for item := range resultChan {
-		if result.StatusCode != 0 || result.Err != nil {
+		if result != nil && (result.StatusCode != 0 || result.Err != nil) {
 			continue
 		}
 		result = item
