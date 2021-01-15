@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"errors"
+	"fmt"
 )
 
 func Func1(data *DataTest) *ResultTest {
@@ -113,4 +113,25 @@ func Prepare(data *DataTest, input PrepareTest) *DataTest {
 	data.Name = "Prepare"
 	data.Age = 1
 	return &DataTest{Ctx: context.Background()}
+}
+
+
+func BeginLogger(note string, _data *DataTest){
+	fmt.Println("[BEGIN LOGGER]",note,_data)
+}
+
+func EndLogger(note string, _data *DataTest, result *ResultTest){
+	fmt.Println("[END LOGGER]",note,_data)
+}
+
+
+
+func OnSuccessHandle(_data *DataTest, _result *ResultTest){
+	fmt.Println("[SUCCESS]:)")
+}
+
+
+func OnFailHandle(_data *DataTest, _result *ResultTest){
+	fmt.Println("[FAIL]:(")
+
 }
