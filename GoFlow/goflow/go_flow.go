@@ -101,78 +101,6 @@ func NewBasicFlowNode(data *_Data, parentResult **_Result, nodeType NodeType, fu
 	}
 }
 
-func (b *BasicFlowNode) SetParentResult(result *_Result) {
-	*b.parentResult = result
-}
-
-func (b *BasicFlowNode) GetParentResult() *_Result {
-	return *b.parentResult
-}
-
-func (b *BasicFlowNode) Run() {
-	if b.ShouldSkip || b.GetParentResult().Err != nil || b.GetParentResult().StatusCode != 0 {
-		return
-	}
-	if b.BeginLogger != nil {
-		b.BeginLogger(b.Note, b.Data)
-	}
-
-	result := b.ImplTask()
-	b.SetParentResult(result)
-
-	if b.EndLogger != nil {
-		b.EndLogger(b.Note, b.Data, b.GetParentResult())
-	}
-}
-
-func (b *BasicFlowNode) ImplTask() *_Result {
-	return &_Result{
-		Err:        nil,
-		StatusCode: 0,
-		StatusMsg:  "",
-	}
-}
-
-func (b *BasicFlowNode) GetNext() IBasicFlowNode {
-	return b.Next
-}
-
-func (b *BasicFlowNode) SetNext(node IBasicFlowNode) {
-	b.Next = node
-}
-
-func (b *BasicFlowNode) GetNodeType() NodeType {
-	return b.NodeType
-}
-
-func (b *BasicFlowNode) SetShouldSkip(shouldSkip bool) {
-	b.ShouldSkip = shouldSkip
-}
-
-func (b *BasicFlowNode) SetNote(note string) {
-	b.Note = note
-}
-
-func (b *BasicFlowNode) GetNote() string {
-	return b.Note
-}
-
-func (b *BasicFlowNode) SetBeginLogger(logger INodeBeginLogger) {
-	b.BeginLogger = logger
-}
-
-func (b *BasicFlowNode) GetBeginLogger() INodeBeginLogger {
-	return b.BeginLogger
-}
-
-func (b *BasicFlowNode) SetEndLogger(logger INodeEndLogger) {
-	b.EndLogger = logger
-}
-
-func (b *BasicFlowNode) GetEndLogger() INodeEndLogger {
-	return b.EndLogger
-}
-
 //END BasicFlowNode
 
 //IfNode Implementation
@@ -215,6 +143,70 @@ func (i *IfNode) ImplTask() *_Result {
 	return i.GetParentResult()
 }
 
+func (i *IfNode) SetParentResult(result *_Result) {
+	*i.parentResult = result
+}
+
+func (i *IfNode) GetParentResult() *_Result {
+	return *i.parentResult
+}
+
+func (i *IfNode) Run() {
+	if i.ShouldSkip || i.GetParentResult().Err != nil || i.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if i.BeginLogger != nil {
+		i.BeginLogger(i.Note, i.Data)
+	}
+
+	result := i.ImplTask()
+	i.SetParentResult(result)
+
+	if i.EndLogger != nil {
+		i.EndLogger(i.Note, i.Data, i.GetParentResult())
+	}
+}
+
+func (i *IfNode) GetNext() IBasicFlowNode {
+	return i.Next
+}
+
+func (i *IfNode) SetNext(node IBasicFlowNode) {
+	i.Next = node
+}
+
+func (i *IfNode) GetNodeType() NodeType {
+	return i.NodeType
+}
+
+func (i *IfNode) SetShouldSkip(shouldSkip bool) {
+	i.ShouldSkip = shouldSkip
+}
+
+func (i *IfNode) SetNote(note string) {
+	i.Note = note
+}
+
+func (i *IfNode) GetNote() string {
+	return i.Note
+}
+
+func (i *IfNode) SetBeginLogger(logger INodeBeginLogger) {
+	i.BeginLogger = logger
+}
+
+func (i *IfNode) GetBeginLogger() INodeBeginLogger {
+	return i.BeginLogger
+}
+
+func (i *IfNode) SetEndLogger(logger INodeEndLogger) {
+	i.EndLogger = logger
+}
+
+func (i *IfNode) GetEndLogger() INodeEndLogger {
+	return i.EndLogger
+}
+
 //END IfNode
 
 //ElseNode Implementation
@@ -236,6 +228,70 @@ func (e *ElseNode) ImplTask() *_Result {
 	return e.GetParentResult()
 }
 
+func (e *ElseNode) SetParentResult(result *_Result) {
+	*e.parentResult = result
+}
+
+func (e *ElseNode) GetParentResult() *_Result {
+	return *e.parentResult
+}
+
+func (e *ElseNode) Run() {
+	if e.ShouldSkip || e.GetParentResult().Err != nil || e.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if e.BeginLogger != nil {
+		e.BeginLogger(e.Note, e.Data)
+	}
+
+	result := e.ImplTask()
+	e.SetParentResult(result)
+
+	if e.EndLogger != nil {
+		e.EndLogger(e.Note, e.Data, e.GetParentResult())
+	}
+}
+
+func (e *ElseNode) GetNext() IBasicFlowNode {
+	return e.Next
+}
+
+func (e *ElseNode) SetNext(node IBasicFlowNode) {
+	e.Next = node
+}
+
+func (e *ElseNode) GetNodeType() NodeType {
+	return e.NodeType
+}
+
+func (e *ElseNode) SetShouldSkip(shouldSkip bool) {
+	e.ShouldSkip = shouldSkip
+}
+
+func (e *ElseNode) SetNote(note string) {
+	e.Note = note
+}
+
+func (e *ElseNode) GetNote() string {
+	return e.Note
+}
+
+func (e *ElseNode) SetBeginLogger(logger INodeBeginLogger) {
+	e.BeginLogger = logger
+}
+
+func (e *ElseNode) GetBeginLogger() INodeBeginLogger {
+	return e.BeginLogger
+}
+
+func (e *ElseNode) SetEndLogger(logger INodeEndLogger) {
+	e.EndLogger = logger
+}
+
+func (e *ElseNode) GetEndLogger() INodeEndLogger {
+	return e.EndLogger
+}
+
 //END ElseNode
 
 // ElseIfNode Implementation
@@ -251,8 +307,8 @@ func NewElseIfNode(data *_Data, parentResult **_Result, condition IBoolFunc, fun
 	}
 }
 
-func (i *ElseIfNode) ImplTask() *_Result {
-	if i.Condition == nil {
+func (e *ElseIfNode) ImplTask() *_Result {
+	if e.Condition == nil {
 		return &_Result{
 			Err:        NewConditionNotFoundError(),
 			StatusCode: 0,
@@ -260,22 +316,86 @@ func (i *ElseIfNode) ImplTask() *_Result {
 		}
 	}
 
-	if i.Condition(i.Data) {
-		for _, functor := range i.Functors {
-			result := functor(i.Data)
+	if e.Condition(e.Data) {
+		for _, functor := range e.Functors {
+			result := functor(e.Data)
 			if result.Err != nil || result.StatusCode != 0 {
 				return result
 			}
 		}
 	}
 
-	current := i.Next
+	current := e.Next
 	for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
 		current.SetShouldSkip(true)
 		current = current.GetNext()
 	}
 
-	return i.GetParentResult()
+	return e.GetParentResult()
+}
+
+func (e *ElseIfNode) SetParentResult(result *_Result) {
+	*e.parentResult = result
+}
+
+func (e *ElseIfNode) GetParentResult() *_Result {
+	return *e.parentResult
+}
+
+func (e *ElseIfNode) Run() {
+	if e.ShouldSkip || e.GetParentResult().Err != nil || e.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if e.BeginLogger != nil {
+		e.BeginLogger(e.Note, e.Data)
+	}
+
+	result := e.ImplTask()
+	e.SetParentResult(result)
+
+	if e.EndLogger != nil {
+		e.EndLogger(e.Note, e.Data, e.GetParentResult())
+	}
+}
+
+func (e *ElseIfNode) GetNext() IBasicFlowNode {
+	return e.Next
+}
+
+func (e *ElseIfNode) SetNext(node IBasicFlowNode) {
+	e.Next = node
+}
+
+func (e *ElseIfNode) GetNodeType() NodeType {
+	return e.NodeType
+}
+
+func (e *ElseIfNode) SetShouldSkip(shouldSkip bool) {
+	e.ShouldSkip = shouldSkip
+}
+
+func (e *ElseIfNode) SetNote(note string) {
+	e.Note = note
+}
+
+func (e *ElseIfNode) GetNote() string {
+	return e.Note
+}
+
+func (e *ElseIfNode) SetBeginLogger(logger INodeBeginLogger) {
+	e.BeginLogger = logger
+}
+
+func (e *ElseIfNode) GetBeginLogger() INodeBeginLogger {
+	return e.BeginLogger
+}
+
+func (e *ElseIfNode) SetEndLogger(logger INodeEndLogger) {
+	e.EndLogger = logger
+}
+
+func (e *ElseIfNode) GetEndLogger() INodeEndLogger {
+	return e.EndLogger
 }
 
 //END ElseIfNode
@@ -289,14 +409,78 @@ func NewNormalNode(data *_Data, parentResult **_Result, functors ...ICallable) *
 	return &ElseNode{NewBasicFlowNode(data, parentResult, NormalNodeType, functors...)}
 }
 
-func (e *NormalNode) ImplTask() *_Result {
-	for _, functor := range e.Functors {
-		result := functor(e.Data)
+func (n *NormalNode) ImplTask() *_Result {
+	for _, functor := range n.Functors {
+		result := functor(n.Data)
 		if result.Err != nil || result.StatusCode != 0 {
 			return result
 		}
 	}
-	return e.GetParentResult()
+	return n.GetParentResult()
+}
+
+func (n *NormalNode) SetParentResult(result *_Result) {
+	*n.parentResult = result
+}
+
+func (n *NormalNode) GetParentResult() *_Result {
+	return *n.parentResult
+}
+
+func (n *NormalNode) Run() {
+	if n.ShouldSkip || n.GetParentResult().Err != nil || n.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if n.BeginLogger != nil {
+		n.BeginLogger(n.Note, n.Data)
+	}
+
+	result := n.ImplTask()
+	n.SetParentResult(result)
+
+	if n.EndLogger != nil {
+		n.EndLogger(n.Note, n.Data, n.GetParentResult())
+	}
+}
+
+func (n *NormalNode) GetNext() IBasicFlowNode {
+	return n.Next
+}
+
+func (n *NormalNode) SetNext(node IBasicFlowNode) {
+	n.Next = node
+}
+
+func (n *NormalNode) GetNodeType() NodeType {
+	return n.NodeType
+}
+
+func (n *NormalNode) SetShouldSkip(shouldSkip bool) {
+	n.ShouldSkip = shouldSkip
+}
+
+func (n *NormalNode) SetNote(note string) {
+	n.Note = note
+}
+
+func (n *NormalNode) GetNote() string {
+	return n.Note
+}
+
+func (n *NormalNode) SetBeginLogger(logger INodeBeginLogger) {
+	n.BeginLogger = logger
+}
+
+func (n *NormalNode) GetBeginLogger() INodeBeginLogger {
+	return n.BeginLogger
+}
+
+func (n *NormalNode) SetEndLogger(logger INodeEndLogger) {
+	n.EndLogger = logger
+}
+
+func (n *NormalNode) GetEndLogger() INodeEndLogger {
+	return n.EndLogger
 }
 
 //END NormalNode
@@ -314,16 +498,80 @@ func NewForNode(times int, data *_Data, parentResult **_Result, functors ...ICal
 	}
 }
 
-func (e *ForNode) ImplTask() *_Result {
-	for i := 0; i < e.Times; i++ {
-		for _, functor := range e.Functors {
-			result := functor(e.Data)
+func (f *ForNode) ImplTask() *_Result {
+	for i := 0; i < f.Times; i++ {
+		for _, functor := range f.Functors {
+			result := functor(f.Data)
 			if result.Err != nil || result.StatusCode != 0 {
 				return result
 			}
 		}
 	}
-	return e.GetParentResult()
+	return f.GetParentResult()
+}
+
+func (f *ForNode) SetParentResult(result *_Result) {
+	*f.parentResult = result
+}
+
+func (f *ForNode) GetParentResult() *_Result {
+	return *f.parentResult
+}
+
+func (f *ForNode) Run() {
+	if f.ShouldSkip || f.GetParentResult().Err != nil || f.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if f.BeginLogger != nil {
+		f.BeginLogger(f.Note, f.Data)
+	}
+
+	result := f.ImplTask()
+	f.SetParentResult(result)
+
+	if f.EndLogger != nil {
+		f.EndLogger(f.Note, f.Data, f.GetParentResult())
+	}
+}
+
+func (f *ForNode) GetNext() IBasicFlowNode {
+	return f.Next
+}
+
+func (f *ForNode) SetNext(node IBasicFlowNode) {
+	f.Next = node
+}
+
+func (f *ForNode) GetNodeType() NodeType {
+	return f.NodeType
+}
+
+func (f *ForNode) SetShouldSkip(shouldSkip bool) {
+	f.ShouldSkip = shouldSkip
+}
+
+func (f *ForNode) SetNote(note string) {
+	f.Note = note
+}
+
+func (f *ForNode) GetNote() string {
+	return f.Note
+}
+
+func (f *ForNode) SetBeginLogger(logger INodeBeginLogger) {
+	f.BeginLogger = logger
+}
+
+func (f *ForNode) GetBeginLogger() INodeBeginLogger {
+	return f.BeginLogger
+}
+
+func (f *ForNode) SetEndLogger(logger INodeEndLogger) {
+	f.EndLogger = logger
+}
+
+func (f *ForNode) GetEndLogger() INodeEndLogger {
+	return f.EndLogger
 }
 
 //END NormalNode
@@ -340,18 +588,18 @@ func NewParallelNode(data *_Data, parentResult **_Result, functors ...ICallable)
 	}
 }
 
-func (e *ParallelNode) ImplTask() *_Result {
-	resultChan := make(chan *_Result, len(e.Functors))
+func (p *ParallelNode) ImplTask() *_Result {
+	resultChan := make(chan *_Result, len(p.Functors))
 
 	wg := sync.WaitGroup{}
-	wg.Add(len(e.Functors))
+	wg.Add(len(p.Functors))
 
 	go func(wg *sync.WaitGroup) {
 		wg.Wait()
 		close(resultChan)
 	}(&wg)
 
-	for _, functor := range e.Functors {
+	for _, functor := range p.Functors {
 		go func(wg *sync.WaitGroup, f ICallable) {
 			defer func() {
 				wg.Done()
@@ -364,12 +612,12 @@ func (e *ParallelNode) ImplTask() *_Result {
 					}
 				}
 			}()
-			result := f(e.Data)
+			result := f(p.Data)
 			resultChan <- result
 		}(&wg, functor)
 	}
 
-	result := e.GetParentResult()
+	result := p.GetParentResult()
 	for item := range resultChan {
 		if result.StatusCode != 0 || result.Err != nil {
 			continue
@@ -378,6 +626,70 @@ func (e *ParallelNode) ImplTask() *_Result {
 	}
 
 	return result
+}
+
+func (p *ParallelNode) SetParentResult(result *_Result) {
+	*p.parentResult = result
+}
+
+func (p *ParallelNode) GetParentResult() *_Result {
+	return *p.parentResult
+}
+
+func (p *ParallelNode) Run() {
+	if p.ShouldSkip || p.GetParentResult().Err != nil || p.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if p.BeginLogger != nil {
+		p.BeginLogger(p.Note, p.Data)
+	}
+
+	result := p.ImplTask()
+	p.SetParentResult(result)
+
+	if p.EndLogger != nil {
+		p.EndLogger(p.Note, p.Data, p.GetParentResult())
+	}
+}
+
+func (p *ParallelNode) GetNext() IBasicFlowNode {
+	return p.Next
+}
+
+func (p *ParallelNode) SetNext(node IBasicFlowNode) {
+	p.Next = node
+}
+
+func (p *ParallelNode) GetNodeType() NodeType {
+	return p.NodeType
+}
+
+func (p *ParallelNode) SetShouldSkip(shouldSkip bool) {
+	p.ShouldSkip = shouldSkip
+}
+
+func (p *ParallelNode) SetNote(note string) {
+	p.Note = note
+}
+
+func (p *ParallelNode) GetNote() string {
+	return p.Note
+}
+
+func (p *ParallelNode) SetBeginLogger(logger INodeBeginLogger) {
+	p.BeginLogger = logger
+}
+
+func (p *ParallelNode) GetBeginLogger() INodeBeginLogger {
+	return p.BeginLogger
+}
+
+func (p *ParallelNode) SetEndLogger(logger INodeEndLogger) {
+	p.EndLogger = logger
+}
+
+func (p *ParallelNode) GetEndLogger() INodeEndLogger {
+	return p.EndLogger
 }
 
 //END NormalNode
