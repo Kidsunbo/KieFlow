@@ -9,7 +9,7 @@ type ICallable = func(_data *_Data) *_Result
 
 type IBoolFunc = func(_data *_Data) bool
 
-type IPrepareFunc = func(input _PrepareInput) *_Data
+type IPrepareFunc = func(_data *_Data, input _PrepareInput) *_Data
 
 type INodeBeginLogger = func(note string, _data *_Data)
 
@@ -47,17 +47,11 @@ type IBasicFlowNode interface {
 	GetEndLogger() INodeEndLogger
 }
 
-//Flow Implementation
+type Flow = FlowEngine
 
-type Flow struct {
+func NewFlow()*Flow{
+	return NewFlowEngine()
 }
-
-func (c *Flow) Prepare(prepareFunc IPrepareFunc, input _PrepareInput) *FlowEngine {
-	data := prepareFunc(input)
-	return NewFlowEngine(data)
-}
-
-//END Flow
 
 //Errors
 
@@ -398,9 +392,8 @@ type FlowEngine struct {
 	onSuccessFunc IOnSuccessFunc
 }
 
-func NewFlowEngine(data *_Data) *FlowEngine {
+func NewFlowEngine() *FlowEngine {
 	res := &FlowEngine{
-		data:  data,
 		nodes: make([]IBasicFlowNode, 0, 10),
 	}
 	tempResult := &_Result{
@@ -410,6 +403,12 @@ func NewFlowEngine(data *_Data) *FlowEngine {
 	}
 	res.result = &tempResult
 	return res
+}
+
+func (c *FlowEngine) Prepare(prepareFunc IPrepareFunc, input _PrepareInput) *FlowEngine {
+	data := prepareFunc(c.data, input)
+	c.data = data
+	return c
 }
 
 func (c *FlowEngine) Do(functors ...ICallable) *FlowEngine {
