@@ -1,9 +1,9 @@
 package main
 
 import (
-	"code.byted.org/gopkg/pkg/errors"
 	"context"
 	"fmt"
+	"errors"
 )
 
 func Func1(data *DataTest) *ResultTest {

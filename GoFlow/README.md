@@ -15,8 +15,6 @@ To use this library, one should follow some rules.
 input is the wrapper for passing arguments to the function due to lack of perfect forwarding. The programmer should take the
 responsibility for the logistic and the error handling.
 
-**Do not return**
-
 #### 2. The `condition` function for `If` and `ElseIf` should implement `IBoolFunc`
 
 #### 3. The `BeginLogger` should implement `INodeBeginLogger`
