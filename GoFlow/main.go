@@ -38,7 +38,7 @@ func PrepareDataWithErr(data *DataSet, input InputParam) *Result {
 }
 
 func BeginLogger(note string, data *DataSet) {
-	fmt.Println("[START]", note, "data = ", data)
+	fmt.Println("\n[START]", note, "data = ", data)
 }
 
 func EndLogger(note string, data *DataSet, result *Result) {
@@ -49,9 +49,11 @@ func main() {
 	result := NewFlow().Do(Fun1WithoutData, Fun2WithoutData).SetNote("开始检查数据").
 		Prepare(InputParam{}, PrepareData).SetNote("开始准备数据").
 		Do(Fun1WithData, Fun2WithData).SetNote("带着数据检查").
+		Parallel(Fun2WithData,Fun1WithData).
 		SetGlobalBeginLogger(BeginLogger).
 		SetGlobalEndLogger(EndLogger).
 		Wait()
+
 
 	fmt.Println("Result=", result)
 }
