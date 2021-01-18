@@ -203,9 +203,16 @@ func (i *IfNode) ImplTask() *_Result {
 	}
 
 	if i.Condition(i.Data) {
+		if i.BeginLogger != nil {
+			i.BeginLogger(i.Note, i.Data)
+		}
+
 		for _, functor := range i.Functors {
 			result := functor(i.Data)
 			if result != nil && (result.Err != nil || result.StatusCode != 0) {
+				if i.EndLogger != nil {
+					i.EndLogger(i.Note, i.Data, result)
+				}
 				return result
 			}
 		}
@@ -214,6 +221,9 @@ func (i *IfNode) ImplTask() *_Result {
 			current.GetNodeType() == ElseSubPathNodeType || current.GetNodeType() == ElseIfSubPathNodeType) {
 			current.SetShouldSkip(true)
 			current = current.GetNext()
+		}
+		if i.EndLogger != nil {
+			i.EndLogger(i.Note, i.Data, i.GetParentResult())
 		}
 	}
 
@@ -224,17 +234,10 @@ func (i *IfNode) Run() {
 	if i.ShouldSkip || i.GetParentResult().Err != nil || i.GetParentResult().StatusCode != 0 {
 		return
 	}
-	if i.BeginLogger != nil {
-		i.BeginLogger(i.Note, i.Data)
-	}
 
 	result := i.ImplTask()
 	if result != nil {
 		i.SetParentResult(result)
-	}
-
-	if i.EndLogger != nil {
-		i.EndLogger(i.Note, i.Data, i.GetParentResult())
 	}
 }
 
@@ -275,9 +278,16 @@ func (i *IfSubPathNode) ImplTask() *_Result {
 	}
 
 	if i.Condition(i.Data) {
+		if i.BeginLogger != nil {
+			i.BeginLogger(i.Note, i.Data)
+		}
+
 		if i.SubPath != nil {
 			result := i.SubPath.Wait()
 			if result != nil && (result.Err != nil || result.StatusCode != 0) {
+				if i.EndLogger != nil {
+					i.EndLogger(i.Note, i.Data, result)
+				}
 				return result
 			}
 		}
@@ -286,6 +296,9 @@ func (i *IfSubPathNode) ImplTask() *_Result {
 			current.GetNodeType() == ElseSubPathNodeType || current.GetNodeType() == ElseIfSubPathNodeType) {
 			current.SetShouldSkip(true)
 			current = current.GetNext()
+		}
+		if i.EndLogger != nil {
+			i.EndLogger(i.Note, i.Data, i.GetParentResult())
 		}
 	}
 
@@ -296,18 +309,12 @@ func (i *IfSubPathNode) Run() {
 	if i.ShouldSkip || i.GetParentResult().Err != nil || i.GetParentResult().StatusCode != 0 {
 		return
 	}
-	if i.BeginLogger != nil {
-		i.BeginLogger(i.Note, i.Data)
-	}
 
 	result := i.ImplTask()
 	if result != nil {
 		i.SetParentResult(result)
 	}
 
-	if i.EndLogger != nil {
-		i.EndLogger(i.Note, i.Data, i.GetParentResult())
-	}
 }
 
 //END IfSubPathNode
@@ -338,9 +345,15 @@ func (e *ElseIfSubPathNode) ImplTask() *_Result {
 	}
 
 	if e.Condition(e.Data) {
+		if e.BeginLogger != nil {
+			e.BeginLogger(e.Note, e.Data)
+		}
 		if e.SubPath != nil {
 			result := e.SubPath.Wait()
 			if result != nil && (result.Err != nil || result.StatusCode != 0) {
+				if e.EndLogger != nil {
+					e.EndLogger(e.Note, e.Data, result)
+				}
 				return result
 			}
 		}
@@ -349,6 +362,9 @@ func (e *ElseIfSubPathNode) ImplTask() *_Result {
 			current.GetNodeType() == ElseSubPathNodeType || current.GetNodeType() == ElseIfSubPathNodeType) {
 			current.SetShouldSkip(true)
 			current = current.GetNext()
+		}
+		if e.EndLogger != nil {
+			e.EndLogger(e.Note, e.Data, e.GetParentResult())
 		}
 	}
 
@@ -359,17 +375,10 @@ func (e *ElseIfSubPathNode) Run() {
 	if e.ShouldSkip || e.GetParentResult().Err != nil || e.GetParentResult().StatusCode != 0 {
 		return
 	}
-	if e.BeginLogger != nil {
-		e.BeginLogger(e.Note, e.Data)
-	}
 
 	result := e.ImplTask()
 	if result != nil {
 		e.SetParentResult(result)
-	}
-
-	if e.EndLogger != nil {
-		e.EndLogger(e.Note, e.Data, e.GetParentResult())
 	}
 }
 
@@ -484,9 +493,15 @@ func (e *ElseIfNode) ImplTask() *_Result {
 	}
 
 	if e.Condition(e.Data) {
+		if e.BeginLogger != nil {
+			e.BeginLogger(e.Note, e.Data)
+		}
 		for _, functor := range e.Functors {
 			result := functor(e.Data)
 			if result != nil && (result.Err != nil || result.StatusCode != 0) {
+				if e.EndLogger != nil {
+					e.EndLogger(e.Note, e.Data, result)
+				}
 				return result
 			}
 		}
@@ -497,6 +512,9 @@ func (e *ElseIfNode) ImplTask() *_Result {
 			current.SetShouldSkip(true)
 			current = current.GetNext()
 		}
+		if e.EndLogger != nil {
+			e.EndLogger(e.Note, e.Data, e.GetParentResult())
+		}
 	}
 
 	return e.GetParentResult()
@@ -506,18 +524,12 @@ func (e *ElseIfNode) Run() {
 	if e.ShouldSkip || e.GetParentResult().Err != nil || e.GetParentResult().StatusCode != 0 {
 		return
 	}
-	if e.BeginLogger != nil {
-		e.BeginLogger(e.Note, e.Data)
-	}
 
 	result := e.ImplTask()
 	if result != nil {
 		e.SetParentResult(result)
 	}
 
-	if e.EndLogger != nil {
-		e.EndLogger(e.Note, e.Data, e.GetParentResult())
-	}
 }
 
 //END ElseIfNode
