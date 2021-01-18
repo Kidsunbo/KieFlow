@@ -333,6 +333,26 @@ func (i *IfSubPathNode) Run() {
 
 }
 
+func (i *IfSubPathNode) SetData(data *DataSet){
+	if i.SubPath!=nil {
+		if len(i.SubPath.getNodes()) != 0 {
+			for current := i.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
+				current.SetData(data)
+			}
+		}
+	}
+}
+
+func (i *IfSubPathNode) SetResultPtr(result **Result){
+	if i.SubPath!=nil {
+		if len(i.SubPath.getNodes()) != 0 {
+			for current := i.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
+				current.SetResultPtr(result)
+			}
+		}
+	}
+}
+
 //END IfSubPathNode
 
 //ElseIfSubPathNode Implementation
@@ -398,6 +418,26 @@ func (e *ElseIfSubPathNode) Run() {
 	}
 }
 
+func (e *ElseIfSubPathNode) SetData(data *DataSet){
+	if e.SubPath!=nil {
+		if len(e.SubPath.getNodes()) != 0 {
+			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
+				current.SetData(data)
+			}
+		}
+	}
+}
+
+func (e *ElseIfSubPathNode) SetResultPtr(result **Result){
+	if e.SubPath!=nil {
+		if len(e.SubPath.getNodes()) != 0 {
+			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
+				current.SetResultPtr(result)
+			}
+		}
+	}
+}
+
 //END ElseIfSubPathNode
 
 //ElseSubPathNode Implementation
@@ -439,6 +479,26 @@ func (e *ElseSubPathNode) Run() {
 
 	if e.EndLogger != nil {
 		e.EndLogger(e.Note, e.Data, e.GetParentResult())
+	}
+}
+
+func (e *ElseSubPathNode) SetData(data *DataSet){
+	if e.SubPath!=nil {
+		if len(e.SubPath.getNodes()) != 0 {
+			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
+				current.SetData(data)
+			}
+		}
+	}
+}
+
+func (e *ElseSubPathNode) SetResultPtr(result **Result){
+	if e.SubPath!=nil {
+		if len(e.SubPath.getNodes()) != 0 {
+			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
+				current.SetResultPtr(result)
+			}
+		}
 	}
 }
 
