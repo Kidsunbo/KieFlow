@@ -28,6 +28,7 @@ const (
 	ForNodeType
 	ParallelNodeType
 	ElseIfNodeType
+	PrepareNodeType
 )
 
 type IBasicFlowNode interface {
@@ -428,7 +429,6 @@ func (f *ForNode) Run() {
 //ParallelNode Implementation
 type ParallelNode struct {
 	*BasicFlowNode
-	Times    int
 	Functors []ICallable
 }
 
@@ -508,7 +508,7 @@ type PrepareNode struct {
 
 func NewPrepareNode(data *DataSet, parentResult **Result, input InputParam, functors ...IPrepareFunc) *PrepareNode {
 	return &PrepareNode{
-		BasicFlowNode: NewBasicFlowNode(data, parentResult, NormalNodeType),
+		BasicFlowNode: NewBasicFlowNode(data, parentResult, PrepareNodeType),
 		Functors:      functors,
 		Input:         input,
 	}
