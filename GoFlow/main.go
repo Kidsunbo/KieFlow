@@ -58,32 +58,32 @@ func CondFalse(data *DataSet)bool{
 }
 
 func SimpleFunc1(data* DataSet)*Result{
-	fmt.Println("SimpleFunc1")
+	fmt.Println("SimpleFunc1, data=",data)
 	return nil
 }
 
 func SimpleFunc2(data* DataSet)*Result{
-	fmt.Println("SimpleFunc2")
+	fmt.Println("SimpleFunc2, data=",data)
 	return nil
 }
 
 func SimpleFunc3(data* DataSet)*Result{
-	fmt.Println("SimpleFunc3")
+	fmt.Println("SimpleFunc3, data=",data)
 	return nil
 }
 
 func SimpleFunc4(data* DataSet)*Result{
-	fmt.Println("SimpleFunc4")
+	fmt.Println("SimpleFunc4, data=",data)
 	return nil
 }
 
 func SimpleFunc5(data* DataSet)*Result{
-	fmt.Println("SimpleFunc5")
+	fmt.Println("SimpleFunc5, data=",data)
 	return nil
 }
 
 func SimpleFunc6(data* DataSet)*Result{
-	fmt.Println("SimpleFunc6")
+	fmt.Println("SimpleFunc6, data=",data)
 	result := new(Result)
 	result.StatusCode = 1
 	return result
@@ -91,15 +91,11 @@ func SimpleFunc6(data* DataSet)*Result{
 
 func main() {
 	flow :=NewFlow()
-	result := flow.Do(Fun1WithoutData, Fun2WithoutData).SetNote("开始检查数据").
-		Prepare(InputParam{}, PrepareData).SetNote("开始准备数据").
-		Do(Fun1WithData, Fun2WithData).SetNote("带着数据检查").
-		Parallel(Fun2WithData, Fun1WithData).SetNote("并行跑一跑").
-		//If(CondFalse,SimpleFunc1).
+	result := flow.Prepare(InputParam{},PrepareData).
+		Do(SimpleFunc1).
+		//Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6).
 		IfSubPath(CondFalse,NewFlow().Do(SimpleFunc1).Do(SimpleFunc2).If(CondTrue,SimpleFunc2).Else(SimpleFunc3)).
 		ElseSubPath(NewFlow().Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6)).
-		SetGlobalBeginLogger(BeginLogger).
-		SetGlobalEndLogger(EndLogger("hello")(59)).
 		Wait()
 
 	fmt.Println("Result=", result)

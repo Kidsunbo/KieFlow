@@ -49,6 +49,8 @@ type IBasicFlowNode interface {
 	GetBeginLogger() INodeBeginLogger
 	SetEndLogger(logger INodeEndLogger)
 	GetEndLogger() INodeEndLogger
+	SetData(data *DataSet)
+	SetResultPtr(result **Result)
 }
 
 type Flow = FlowEngine
@@ -177,6 +179,14 @@ func (b *BasicFlowNode) GetEndLogger() INodeEndLogger {
 	return b.EndLogger
 }
 
+func (b *BasicFlowNode) SetData(data *DataSet){
+	b.Data = data
+}
+
+func (b *BasicFlowNode) SetResultPtr(result **Result){
+	b.parentResult = result
+}
+
 //END BasicFlowNode
 
 //IfNode Implementation
@@ -252,7 +262,7 @@ type IfSubPathNode struct {
 }
 
 func NewIfSubPathNode(condition IBoolFunc, subEngine *FlowEngine, parent *FlowEngine) *IfSubPathNode {
-	subEngine.Inherit(parent)
+	subEngine.Attach(parent)
 	return &IfSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, IfSubPathNodeType),
 		Condition:     condition,
@@ -261,7 +271,7 @@ func NewIfSubPathNode(condition IBoolFunc, subEngine *FlowEngine, parent *FlowEn
 }
 
 func NewIfSubPathNodeInElse(condition IBoolFunc, subEngine *FlowEngine, parent *ElseFlowEngine) *IfSubPathNode {
-	subEngine.InheritElse(parent)
+	subEngine.AttachElse(parent)
 	return &IfSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, IfSubPathNodeType),
 		Condition:     condition,
@@ -328,7 +338,7 @@ type ElseIfSubPathNode struct {
 }
 
 func NewElseIfSubPathNode(condition IBoolFunc, subEngine *FlowEngine, parent *ElseFlowEngine) *ElseIfSubPathNode {
-	subEngine.InheritElse(parent)
+	subEngine.AttachElse(parent)
 	return &ElseIfSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, ElseIfSubPathNodeType),
 		Condition:     condition,
@@ -392,7 +402,7 @@ type ElseSubPathNode struct {
 }
 
 func NewElseSubPathNode(subEngine *FlowEngine, parent *ElseFlowEngine) *ElseSubPathNode {
-	subEngine.InheritElse(parent)
+	subEngine.AttachElse(parent)
 	return &ElseSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, ElseSubPathNodeType),
 		SubPath:       subEngine,
@@ -762,17 +772,31 @@ func NewFlowEngine() *FlowEngine {
 	return res
 }
 
-func (f *FlowEngine) Inherit(parent *FlowEngine) *FlowEngine {
+func (f *FlowEngine) Attach(parent *FlowEngine) *FlowEngine {
 	f.data = parent.data
+	f.result = parent.result
 	f.onFailFunc = parent.onFailFunc
 	f.onSuccessFunc = parent.onSuccessFunc
+	if len(f.nodes)!=0 {
+		for current := f.nodes[0];current!=nil;current=current.GetNext(){
+			current.SetResultPtr(parent.result)
+			current.SetData(parent.data)
+		}
+	}
 	return f
 }
 
-func (f *FlowEngine) InheritElse(parent *ElseFlowEngine) *FlowEngine {
+func (f *FlowEngine) AttachElse(parent *ElseFlowEngine) *FlowEngine {
 	f.data = *parent.data
+	f.result = parent.result
 	f.onFailFunc = parent.onFailFunc
 	f.onSuccessFunc = parent.onSuccessFunc
+	if len(f.nodes)!=0 {
+		for current := f.nodes[0];current!=nil;current=current.GetNext(){
+			current.SetResultPtr(parent.result)
+			current.SetData(*parent.data)
+		}
+	}
 	return f
 }
 

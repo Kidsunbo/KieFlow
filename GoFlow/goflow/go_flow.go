@@ -48,6 +48,8 @@ type IBasicFlowNode interface {
 	GetBeginLogger() INodeBeginLogger
 	SetEndLogger(logger INodeEndLogger)
 	GetEndLogger() INodeEndLogger
+	SetData(data *_Data)
+	SetResultPtr(result **_Result)
 }
 
 type Flow = FlowEngine
@@ -174,6 +176,14 @@ func (b *BasicFlowNode) SetEndLogger(logger INodeEndLogger) {
 
 func (b *BasicFlowNode) GetEndLogger() INodeEndLogger {
 	return b.EndLogger
+}
+
+func (b *BasicFlowNode) SetData(data *_Data){
+	b.Data = data
+}
+
+func (b *BasicFlowNode) SetResultPtr(result **_Result){
+	b.parentResult = result
 }
 
 //END BasicFlowNode
@@ -766,6 +776,12 @@ func (f *FlowEngine) Attach(parent *FlowEngine) *FlowEngine {
 	f.result = parent.result
 	f.onFailFunc = parent.onFailFunc
 	f.onSuccessFunc = parent.onSuccessFunc
+	if len(f.nodes)!=0 {
+		for current := f.nodes[0];current!=nil;current=current.GetNext(){
+			current.SetResultPtr(parent.result)
+			current.SetData(parent.data)
+		}
+	}
 	return f
 }
 
@@ -774,6 +790,12 @@ func (f *FlowEngine) AttachElse(parent *ElseFlowEngine) *FlowEngine {
 	f.result = parent.result
 	f.onFailFunc = parent.onFailFunc
 	f.onSuccessFunc = parent.onSuccessFunc
+	if len(f.nodes)!=0 {
+		for current := f.nodes[0];current!=nil;current=current.GetNext(){
+			current.SetResultPtr(parent.result)
+			current.SetData(*parent.data)
+		}
+	}
 	return f
 }
 
