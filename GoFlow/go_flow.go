@@ -5,19 +5,19 @@ import (
 	"sync"
 )
 
-type ICallable = func(_data *DataTest) *ResultTest
+type ICallable = func(_data *DataSet) *Result
 
-type IBoolFunc = func(_data *DataTest) bool
+type IBoolFunc = func(_data *DataSet) bool
 
-type IPrepareFunc = func(_data *DataTest, input PrepareTest) *DataTest
+type IPrepareFunc = func(_data *DataSet, input InputParam) *Result
 
-type INodeBeginLogger = func(note string, _data *DataTest)
+type INodeBeginLogger = func(note string, _data *DataSet)
 
-type INodeEndLogger = func(note string, _data *DataTest, _result *ResultTest)
+type INodeEndLogger = func(note string, _data *DataSet, _result *Result)
 
-type IOnSuccessFunc = func(_data *DataTest, _result *ResultTest)
+type IOnSuccessFunc = func(_data *DataSet, _result *Result)
 
-type IOnFailFunc = func(_data *DataTest, _result *ResultTest)
+type IOnFailFunc = func(_data *DataSet, _result *Result)
 
 type NodeType int64
 
@@ -31,10 +31,10 @@ const (
 )
 
 type IBasicFlowNode interface {
-	SetParentResult(result *ResultTest)
-	GetParentResult() *ResultTest
+	SetParentResult(result *Result)
+	GetParentResult() *Result
 	Run()
-	ImplTask() *ResultTest
+	ImplTask() *Result
 	SetNext(node IBasicFlowNode)
 	GetNext() IBasicFlowNode
 	GetNodeType() NodeType
@@ -81,31 +81,29 @@ func (c *PanicHappened) Error() string {
 
 // BasicFlowNode Implementation
 type BasicFlowNode struct {
-	Functors     []ICallable
 	NodeType     NodeType
 	Next         IBasicFlowNode
-	Data         *DataTest
+	Data         *DataSet
 	ShouldSkip   bool
-	parentResult **ResultTest
+	parentResult **Result
 	BeginLogger  INodeBeginLogger
 	EndLogger    INodeEndLogger
 	Note         string
 }
 
-func NewBasicFlowNode(data *DataTest, parentResult **ResultTest, nodeType NodeType, functors ...ICallable) *BasicFlowNode {
+func NewBasicFlowNode(data *DataSet, parentResult **Result, nodeType NodeType) *BasicFlowNode {
 	return &BasicFlowNode{
-		Functors:     functors,
 		NodeType:     nodeType,
 		Data:         data,
 		parentResult: parentResult,
 	}
 }
 
-func (b *BasicFlowNode) SetParentResult(result *ResultTest) {
+func (b *BasicFlowNode) SetParentResult(result *Result) {
 	*b.parentResult = result
 }
 
-func (b *BasicFlowNode) GetParentResult() *ResultTest {
+func (b *BasicFlowNode) GetParentResult() *Result {
 	return *b.parentResult
 }
 
@@ -127,8 +125,8 @@ func (b *BasicFlowNode) Run() {
 	}
 }
 
-func (b *BasicFlowNode) ImplTask() *ResultTest {
-	return &ResultTest{
+func (b *BasicFlowNode) ImplTask() *Result {
+	return &Result{
 		Err:        nil,
 		StatusCode: 0,
 		StatusMsg:  "",
@@ -181,18 +179,20 @@ func (b *BasicFlowNode) GetEndLogger() INodeEndLogger {
 type IfNode struct {
 	*BasicFlowNode
 	Condition IBoolFunc
+	Functors  []ICallable
 }
 
-func NewIfNode(data *DataTest, parentResult **ResultTest, condition IBoolFunc, functors ...ICallable) *IfNode {
+func NewIfNode(data *DataSet, parentResult **Result, condition IBoolFunc, functors ...ICallable) *IfNode {
 	return &IfNode{
-		BasicFlowNode: NewBasicFlowNode(data, parentResult, IfNodeType, functors...),
+		BasicFlowNode: NewBasicFlowNode(data, parentResult, IfNodeType),
 		Condition:     condition,
+		Functors:      functors,
 	}
 }
 
-func (i *IfNode) ImplTask() *ResultTest {
+func (i *IfNode) ImplTask() *Result {
 	if i.Condition == nil {
-		return &ResultTest{
+		return &Result{
 			Err:        NewConditionNotFoundError(),
 			StatusCode: 0,
 			StatusMsg:  "",
@@ -206,12 +206,11 @@ func (i *IfNode) ImplTask() *ResultTest {
 				return result
 			}
 		}
-	}
-
-	current := i.Next
-	for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
-		current.SetShouldSkip(true)
-		current = current.GetNext()
+		current := i.Next
+		for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
+			current.SetShouldSkip(true)
+			current = current.GetNext()
+		}
 	}
 
 	return i.GetParentResult()
@@ -240,13 +239,14 @@ func (i *IfNode) Run() {
 //ElseNode Implementation
 type ElseNode struct {
 	*BasicFlowNode
+	Functors []ICallable
 }
 
-func NewElseNode(data *DataTest, parentResult **ResultTest, functors ...ICallable) *ElseNode {
-	return &ElseNode{NewBasicFlowNode(data, parentResult, ElseNodeType, functors...)}
+func NewElseNode(data *DataSet, parentResult **Result, functors ...ICallable) *ElseNode {
+	return &ElseNode{BasicFlowNode: NewBasicFlowNode(data, parentResult, ElseNodeType), Functors: functors}
 }
 
-func (e *ElseNode) ImplTask() *ResultTest {
+func (e *ElseNode) ImplTask() *Result {
 	for _, functor := range e.Functors {
 		result := functor(e.Data)
 		if result != nil && (result.Err != nil || result.StatusCode != 0) {
@@ -280,18 +280,20 @@ func (e *ElseNode) Run() {
 type ElseIfNode struct {
 	*BasicFlowNode
 	Condition IBoolFunc
+	Functors  []ICallable
 }
 
-func NewElseIfNode(data *DataTest, parentResult **ResultTest, condition IBoolFunc, functors ...ICallable) *ElseIfNode {
+func NewElseIfNode(data *DataSet, parentResult **Result, condition IBoolFunc, functors ...ICallable) *ElseIfNode {
 	return &ElseIfNode{
-		BasicFlowNode: NewBasicFlowNode(data, parentResult, ElseIfNodeType, functors...),
+		BasicFlowNode: NewBasicFlowNode(data, parentResult, ElseIfNodeType),
 		Condition:     condition,
+		Functors:      functors,
 	}
 }
 
-func (e *ElseIfNode) ImplTask() *ResultTest {
+func (e *ElseIfNode) ImplTask() *Result {
 	if e.Condition == nil {
-		return &ResultTest{
+		return &Result{
 			Err:        NewConditionNotFoundError(),
 			StatusCode: 0,
 			StatusMsg:  "",
@@ -305,12 +307,12 @@ func (e *ElseIfNode) ImplTask() *ResultTest {
 				return result
 			}
 		}
-	}
 
-	current := e.Next
-	for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
-		current.SetShouldSkip(true)
-		current = current.GetNext()
+		current := e.Next
+		for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
+			current.SetShouldSkip(true)
+			current = current.GetNext()
+		}
 	}
 
 	return e.GetParentResult()
@@ -339,13 +341,14 @@ func (e *ElseIfNode) Run() {
 //NormalNode Implementation
 type NormalNode struct {
 	*BasicFlowNode
+	Functors []ICallable
 }
 
-func NewNormalNode(data *DataTest, parentResult **ResultTest, functors ...ICallable) *ElseNode {
-	return &ElseNode{NewBasicFlowNode(data, parentResult, NormalNodeType, functors...)}
+func NewNormalNode(data *DataSet, parentResult **Result, functors ...ICallable) *NormalNode {
+	return &NormalNode{BasicFlowNode: NewBasicFlowNode(data, parentResult, NormalNodeType), Functors: functors}
 }
 
-func (n *NormalNode) ImplTask() *ResultTest {
+func (n *NormalNode) ImplTask() *Result {
 	for _, functor := range n.Functors {
 		result := functor(n.Data)
 		if result != nil && (result.Err != nil || result.StatusCode != 0) {
@@ -378,17 +381,19 @@ func (n *NormalNode) Run() {
 //ForNode Implementation
 type ForNode struct {
 	*BasicFlowNode
-	Times int
+	Times    int
+	Functors []ICallable
 }
 
-func NewForNode(times int, data *DataTest, parentResult **ResultTest, functors ...ICallable) *ForNode {
+func NewForNode(times int, data *DataSet, parentResult **Result, functors ...ICallable) *ForNode {
 	return &ForNode{
-		BasicFlowNode: NewBasicFlowNode(data, parentResult, ForNodeType, functors...),
+		BasicFlowNode: NewBasicFlowNode(data, parentResult, ForNodeType),
 		Times:         times,
+		Functors:      functors,
 	}
 }
 
-func (f *ForNode) ImplTask() *ResultTest {
+func (f *ForNode) ImplTask() *Result {
 	for i := 0; i < f.Times; i++ {
 		for _, functor := range f.Functors {
 			result := functor(f.Data)
@@ -423,17 +428,19 @@ func (f *ForNode) Run() {
 //ParallelNode Implementation
 type ParallelNode struct {
 	*BasicFlowNode
-	Times int
+	Times    int
+	Functors []ICallable
 }
 
-func NewParallelNode(data *DataTest, parentResult **ResultTest, functors ...ICallable) *ParallelNode {
+func NewParallelNode(data *DataSet, parentResult **Result, functors ...ICallable) *ParallelNode {
 	return &ParallelNode{
-		BasicFlowNode: NewBasicFlowNode(data, parentResult, ParallelNodeType, functors...),
+		BasicFlowNode: NewBasicFlowNode(data, parentResult, ParallelNodeType),
+		Functors:      functors,
 	}
 }
 
-func (p *ParallelNode) ImplTask() *ResultTest {
-	resultChan := make(chan *ResultTest, len(p.Functors))
+func (p *ParallelNode) ImplTask() *Result {
+	resultChan := make(chan *Result, len(p.Functors))
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(p.Functors))
@@ -449,7 +456,7 @@ func (p *ParallelNode) ImplTask() *ResultTest {
 				wg.Done()
 				if a := recover(); a != nil {
 					debug.PrintStack()
-					resultChan <- &ResultTest{
+					resultChan <- &Result{
 						Err:        NewPanicHappened(""),
 						StatusCode: 0,
 						StatusMsg:  "",
@@ -492,12 +499,57 @@ func (p *ParallelNode) Run() {
 
 //END NormalNode
 
+//PrepareNode Implementation
+type PrepareNode struct {
+	*BasicFlowNode
+	Functors []IPrepareFunc
+	Input    InputParam
+}
+
+func NewPrepareNode(data *DataSet, parentResult **Result, input InputParam, functors ...IPrepareFunc) *PrepareNode {
+	return &PrepareNode{
+		BasicFlowNode: NewBasicFlowNode(data, parentResult, NormalNodeType),
+		Functors:      functors,
+		Input:         input,
+	}
+}
+
+func (p *PrepareNode) ImplTask() *Result {
+	for _, functor := range p.Functors {
+		result := functor(p.Data, p.Input)
+		if result != nil && (result.Err != nil || result.StatusCode != 0) {
+			return result
+		}
+	}
+	return p.GetParentResult()
+}
+
+func (p *PrepareNode) Run() {
+	if p.ShouldSkip || p.GetParentResult().Err != nil || p.GetParentResult().StatusCode != 0 {
+		return
+	}
+	if p.BeginLogger != nil {
+		p.BeginLogger(p.Note, p.Data)
+	}
+
+	result := p.ImplTask()
+	if result != nil {
+		p.SetParentResult(result)
+	}
+
+	if p.EndLogger != nil {
+		p.EndLogger(p.Note, p.Data, p.GetParentResult())
+	}
+}
+
+//END PrepareNode
+
 //FlowEngine Implementation
 
 type FlowEngine struct {
-	data          *DataTest
+	data          *DataSet
 	nodes         []IBasicFlowNode
-	result        **ResultTest
+	result        **Result
 	onFailFunc    IOnFailFunc
 	onSuccessFunc IOnSuccessFunc
 }
@@ -506,122 +558,122 @@ func NewFlowEngine() *FlowEngine {
 	res := &FlowEngine{
 		nodes: make([]IBasicFlowNode, 0, 10),
 	}
-	tempResult := &ResultTest{
-		Err:        nil,
-		StatusCode: 0,
-		StatusMsg:  "",
-	}
-	res.data = new(DataTest)
+	res.data = new(DataSet)
+
+	tempResult := new(Result)
 	res.result = &tempResult
 	return res
 }
 
-func (c *FlowEngine) Prepare(prepareFunc IPrepareFunc, input PrepareTest) *FlowEngine {
-	data := prepareFunc(c.data, input)
-	c.data = data
-	return c
-}
-
-func (c *FlowEngine) Do(functors ...ICallable) *FlowEngine {
-	node := NewNormalNode(c.data, c.result, functors...)
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetNext(node)
+func (f *FlowEngine) Prepare(input InputParam, prepareFunc ...IPrepareFunc) *FlowEngine {
+	node := NewPrepareNode(f.data, f.result, input, prepareFunc...)
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetNext(node)
 	}
-	c.nodes = append(c.nodes, node)
-	return c
+	f.nodes = append(f.nodes, node)
+	return f
 }
 
-func (c *FlowEngine) For(times int, functors ...ICallable) *FlowEngine {
-	node := NewForNode(times, c.data, c.result, functors...)
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetNext(node)
+func (f *FlowEngine) Do(functors ...ICallable) *FlowEngine {
+	node := NewNormalNode(f.data, f.result, functors...)
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetNext(node)
 	}
-	c.nodes = append(c.nodes, node)
-	return c
+	f.nodes = append(f.nodes, node)
+	return f
 }
 
-func (c *FlowEngine) Parallel(functors ...ICallable) *FlowEngine {
-	node := NewParallelNode(c.data, c.result, functors...)
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetNext(node)
+func (f *FlowEngine) For(times int, functors ...ICallable) *FlowEngine {
+	node := NewForNode(times, f.data, f.result, functors...)
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetNext(node)
 	}
-	c.nodes = append(c.nodes, node)
-	return c
+	f.nodes = append(f.nodes, node)
+	return f
 }
 
-func (c *FlowEngine) If(condition IBoolFunc, functors ...ICallable) *ElseFlowEngine {
-	node := NewIfNode(c.data, c.result, condition, functors...)
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetNext(node)
+func (f *FlowEngine) Parallel(functors ...ICallable) *FlowEngine {
+	node := NewParallelNode(f.data, f.result, functors...)
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetNext(node)
 	}
-	c.nodes = append(c.nodes, node)
-	return NewElseFlowEngine(&c.data, c, c.result, &c.nodes)
+	f.nodes = append(f.nodes, node)
+	return f
 }
 
-func (c *FlowEngine) Wait() *ResultTest {
-	for _, node := range c.nodes {
+func (f *FlowEngine) If(condition IBoolFunc, functors ...ICallable) *ElseFlowEngine {
+	node := NewIfNode(f.data, f.result, condition, functors...)
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetNext(node)
+	}
+	f.nodes = append(f.nodes, node)
+	return NewElseFlowEngine(&f.data, f, f.result, &f.nodes)
+}
+
+func (f *FlowEngine) Wait() *Result {
+	for _, node := range f.nodes {
 		node.Run()
 	}
-	if c.onSuccessFunc != nil {
-		if (*c.result).Err == nil && (*c.result).StatusCode == 0 {
-			c.onSuccessFunc(c.data, *c.result)
+	if f.onSuccessFunc != nil {
+		if (*f.result).Err == nil && (*f.result).StatusCode == 0 {
+			f.onSuccessFunc(f.data, *f.result)
 		}
 	}
-	if c.onFailFunc != nil {
-		if (*c.result).Err != nil || (*c.result).StatusCode != 0 {
-			c.onFailFunc(c.data, *c.result)
+	if f.onFailFunc != nil {
+		if (*f.result).Err != nil || (*f.result).StatusCode != 0 {
+			f.onFailFunc(f.data, *f.result)
 		}
 	}
-	return *c.result
+	return *f.result
 }
 
-func (c *FlowEngine) SetNote(note string) *FlowEngine {
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetNote(note)
+func (f *FlowEngine) SetNote(note string) *FlowEngine {
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetNote(note)
 	}
-	return c
+	return f
 }
 
-func (c *FlowEngine) SetBeginLogger(logger INodeBeginLogger) *FlowEngine {
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetBeginLogger(logger)
+func (f *FlowEngine) SetBeginLogger(logger INodeBeginLogger) *FlowEngine {
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetBeginLogger(logger)
 	}
-	return c
+	return f
 }
 
-func (c *FlowEngine) SetEndLogger(logger INodeEndLogger) *FlowEngine {
-	if len(c.nodes) != 0 {
-		c.nodes[len(c.nodes)-1].SetEndLogger(logger)
+func (f *FlowEngine) SetEndLogger(logger INodeEndLogger) *FlowEngine {
+	if len(f.nodes) != 0 {
+		f.nodes[len(f.nodes)-1].SetEndLogger(logger)
 	}
-	return c
+	return f
 }
 
-func (c *FlowEngine) SetGlobalBeginLogger(logger INodeBeginLogger) *FlowEngine {
-	for _, note := range c.nodes {
+func (f *FlowEngine) SetGlobalBeginLogger(logger INodeBeginLogger) *FlowEngine {
+	for _, note := range f.nodes {
 		if note.GetBeginLogger() == nil {
 			note.SetBeginLogger(logger)
 		}
 	}
-	return c
+	return f
 }
 
-func (c *FlowEngine) SetGlobalEndLogger(logger INodeEndLogger) *FlowEngine {
-	for _, note := range c.nodes {
+func (f *FlowEngine) SetGlobalEndLogger(logger INodeEndLogger) *FlowEngine {
+	for _, note := range f.nodes {
 		if note.GetEndLogger() == nil {
 			note.SetEndLogger(logger)
 		}
 	}
-	return c
+	return f
 }
 
-func (c *FlowEngine) OnFail(functor IOnFailFunc) *FlowEngine {
-	c.onFailFunc = functor
-	return c
+func (f *FlowEngine) OnFail(functor IOnFailFunc) *FlowEngine {
+	f.onFailFunc = functor
+	return f
 }
 
-func (c *FlowEngine) OnSuccess(functor IOnFailFunc) *FlowEngine {
-	c.onSuccessFunc = functor
-	return c
+func (f *FlowEngine) OnSuccess(functor IOnFailFunc) *FlowEngine {
+	f.onSuccessFunc = functor
+	return f
 }
 
 //END FlowEngine
@@ -629,15 +681,15 @@ func (c *FlowEngine) OnSuccess(functor IOnFailFunc) *FlowEngine {
 //ElseFlowEngine implementation
 
 type ElseFlowEngine struct {
-	data          **DataTest
+	data          **DataSet
 	nodes         *[]IBasicFlowNode
-	result        **ResultTest
+	result        **Result
 	invoker       *FlowEngine
 	onFailFunc    IOnFailFunc
 	onSuccessFunc IOnSuccessFunc
 }
 
-func NewElseFlowEngine(data **DataTest, invoker *FlowEngine, result **ResultTest, nodes *[]IBasicFlowNode) *ElseFlowEngine {
+func NewElseFlowEngine(data **DataSet, invoker *FlowEngine, result **Result, nodes *[]IBasicFlowNode) *ElseFlowEngine {
 	res := &ElseFlowEngine{
 		data:    data,
 		nodes:   nodes,
@@ -647,10 +699,13 @@ func NewElseFlowEngine(data **DataTest, invoker *FlowEngine, result **ResultTest
 	return res
 }
 
-func (e *ElseFlowEngine) Prepare(prepareFunc IPrepareFunc, input PrepareTest) *ElseFlowEngine {
-	data := prepareFunc(*e.data, input)
-	*e.data = data
-	return e
+func (e *ElseFlowEngine) Prepare(input InputParam, prepareFunc ...IPrepareFunc) *FlowEngine {
+	node := NewPrepareNode(*e.data, e.result, input, prepareFunc...)
+	if len(*e.nodes) != 0 {
+		(*e.nodes)[len(*e.nodes)-1].SetNext(node)
+	}
+	*e.nodes = append(*e.nodes, node)
+	return e.invoker
 }
 
 func (e *ElseFlowEngine) Do(functors ...ICallable) *FlowEngine {
@@ -703,7 +758,7 @@ func (e *ElseFlowEngine) Else(functors ...ICallable) *FlowEngine {
 	return e.invoker
 }
 
-func (e *ElseFlowEngine) Wait() *ResultTest {
+func (e *ElseFlowEngine) Wait() *Result {
 	for _, node := range *e.nodes {
 		node.Run()
 	}

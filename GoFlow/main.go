@@ -1,61 +1,60 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
-func SimpleWorkFlow() {
-	result := NewFlow().
-		Do(Func1).
-		Prepare(Prepare, PrepareTest{}).
-		If(CondTrue, Func2, Func3).
-		Else(Func4, Func5).
-		Do(Func4, Func1, Func6).SetNote("订单类型校验").
-		If(CondFalse, Func2, Func3).
-		ElseIf(CondFalse, Func6, Func5).
-		Else(Func1, Func2).
-		For(3, Func7).
-		Parallel(Func9, Func2, Func1, Func6).
-		If(CondTrue, Func2).
-		SetGlobalEndLogger(EndLogger).
-		Wait()
-	fmt.Println(result)
+func Fun1WithoutData(data *DataSet)*Result  {
+	fmt.Println("Fun1WithoutData, ",data)
+	return nil
 }
 
-func NoteCheck() {
-	result := NewFlow().
-		Do(Func1).SetNote("first").SetBeginLogger(BeginLogger).SetEndLogger(EndLogger).
-		Do(Func2).
-		Do(Func3).
-		SetGlobalBeginLogger(BeginLogger).
-		Wait()
-	fmt.Println(result)
+func Fun2WithoutData(data *DataSet)*Result  {
+	fmt.Println("Fun2WithoutData, ",data)
+	return new(Result)
 }
 
-func OnSuccessAndFailCheck() {
-	result := NewFlow().
-		Do(Func1).
-		Do(Func2).
-		Do(Func3).
-		Do(Func4).
-		Do(Func5).
-		Do(Func6).
-		Do(Func7).
-		//Do(Func8).
-		Do(Func9).
-		Do(Func1).
-		Do(Func2).
-		Do(Func3).
-		OnSuccess(OnSuccessHandle).
-		OnFail(OnFailHandle).
-		Wait()
-	fmt.Println(result)
+
+func Fun1WithData(data *DataSet)*Result  {
+	fmt.Println("Fun1WithData, ",data)
+	return new(Result)
 }
 
-func main() {
-	fmt.Println("Welcome to GoFlow!")
 
-	SimpleWorkFlow()
-	NoteCheck()
-	OnSuccessAndFailCheck()
+func Fun2WithData(data *DataSet)*Result  {
+	fmt.Println("Fun2WithData, ",data)
+	return nil
+}
+
+func PrepareData(data *DataSet,input InputParam)*Result{
+	fmt.Println("PrepareData, data=",data,"input=",input)
+	data.Name = "Tom is Tom"
+	result := new(Result)
+	return result
+}
+
+func PrepareDataWithErr(data *DataSet,input InputParam)*Result{
+	fmt.Println("PrepareData, data=",data,"input=",input)
+	data.Name = "Tom is Tom"
+	result := new(Result)
+	result.StatusCode = 1
+	return result
+}
+
+func BeginLogger(note string,data *DataSet){
+	fmt.Println("[START]", note,"data = ",data)
+}
+
+func EndLogger(note string,data *DataSet,result *Result){
+	fmt.Println("[END]", note,"data = ",data, "result=",result)
+}
+
+
+func main(){
+	result := NewFlow().Do(Fun1WithoutData,Fun2WithoutData).SetNote("开始检查数据").
+	Prepare(InputParam{},PrepareData).SetNote("开始准备数据").
+	Do(Fun1WithData,Fun2WithData).SetNote("带着数据检查").
+	SetGlobalBeginLogger(BeginLogger).
+	SetGlobalEndLogger(EndLogger).
+	Wait()
+
+	fmt.Println("Result=",result)
 }
