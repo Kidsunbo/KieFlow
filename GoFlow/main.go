@@ -95,9 +95,9 @@ func main() {
 		Prepare(InputParam{}, PrepareData).SetNote("开始准备数据").
 		Do(Fun1WithData, Fun2WithData).SetNote("带着数据检查").
 		Parallel(Fun2WithData, Fun1WithData).SetNote("并行跑一跑").
-		If(CondFalse,SimpleFunc1).
-		//IfSubPath(CondFalse,NewFlow().Do(SimpleFunc1).Do(SimpleFunc2).If(CondTrue,SimpleFunc2).Else(SimpleFunc3)).
-		//ElseSubPath(NewFlow().Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6)).
+		//If(CondFalse,SimpleFunc1).
+		IfSubPath(CondFalse,NewFlow().Do(SimpleFunc1).Do(SimpleFunc2).If(CondTrue,SimpleFunc2).Else(SimpleFunc3)).
+		ElseSubPath(NewFlow().Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6)).
 		SetGlobalBeginLogger(BeginLogger).
 		SetGlobalEndLogger(EndLogger("hello")(59)).
 		Wait()
