@@ -34,6 +34,20 @@ const (
 	ElseSubPathNodeType
 )
 
+type IFlowEngine interface {
+	getData()*DataSet
+	setData(data *DataSet)
+	getResult()**Result
+	setResult(result **Result)
+	getOnFailFunc() IOnFailFunc
+	setOnFailFunc(function IOnFailFunc)
+	getOnSuccessFunc() IOnSuccessFunc
+	setOnSuccessFunc(function IOnSuccessFunc)
+	getNodes() []IBasicFlowNode
+	attach(engine IFlowEngine)
+	Wait()*Result
+}
+
 type IBasicFlowNode interface {
 	SetParentResult(result *Result)
 	GetParentResult() *Result
@@ -258,22 +272,13 @@ func (i *IfNode) Run() {
 type IfSubPathNode struct {
 	*BasicFlowNode
 	Condition IBoolFunc
-	SubPath   *FlowEngine
+	SubPath   IFlowEngine
 }
 
-func NewIfSubPathNode(condition IBoolFunc, subEngine *FlowEngine, parent *FlowEngine) *IfSubPathNode {
-	subEngine.Attach(parent)
+func NewIfSubPathNode(condition IBoolFunc, subEngine IFlowEngine, parent IFlowEngine) *IfSubPathNode {
+	subEngine.attach(parent)
 	return &IfSubPathNode{
-		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, IfSubPathNodeType),
-		Condition:     condition,
-		SubPath:       subEngine,
-	}
-}
-
-func NewIfSubPathNodeInElse(condition IBoolFunc, subEngine *FlowEngine, parent *ElseFlowEngine) *IfSubPathNode {
-	subEngine.AttachElse(parent)
-	return &IfSubPathNode{
-		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, IfSubPathNodeType),
+		BasicFlowNode: NewBasicFlowNode(subEngine.getData(), subEngine.getResult(), IfSubPathNodeType),
 		Condition:     condition,
 		SubPath:       subEngine,
 	}
@@ -334,13 +339,13 @@ func (i *IfSubPathNode) Run() {
 type ElseIfSubPathNode struct {
 	*BasicFlowNode
 	Condition IBoolFunc
-	SubPath   *FlowEngine
+	SubPath   IFlowEngine
 }
 
-func NewElseIfSubPathNode(condition IBoolFunc, subEngine *FlowEngine, parent *ElseFlowEngine) *ElseIfSubPathNode {
-	subEngine.AttachElse(parent)
+func NewElseIfSubPathNode(condition IBoolFunc, subEngine IFlowEngine, parent IFlowEngine) *ElseIfSubPathNode {
+	subEngine.attach(parent)
 	return &ElseIfSubPathNode{
-		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, ElseIfSubPathNodeType),
+		BasicFlowNode: NewBasicFlowNode(subEngine.getData(), subEngine.getResult(), ElseIfSubPathNodeType),
 		Condition:     condition,
 		SubPath:       subEngine,
 	}
@@ -398,13 +403,13 @@ func (e *ElseIfSubPathNode) Run() {
 //ElseSubPathNode Implementation
 type ElseSubPathNode struct {
 	*BasicFlowNode
-	SubPath *FlowEngine
+	SubPath IFlowEngine
 }
 
-func NewElseSubPathNode(subEngine *FlowEngine, parent *ElseFlowEngine) *ElseSubPathNode {
-	subEngine.AttachElse(parent)
+func NewElseSubPathNode(subEngine IFlowEngine, parent IFlowEngine) *ElseSubPathNode {
+	subEngine.attach(parent)
 	return &ElseSubPathNode{
-		BasicFlowNode: NewBasicFlowNode(subEngine.data, subEngine.result, ElseSubPathNodeType),
+		BasicFlowNode: NewBasicFlowNode(subEngine.getData(), subEngine.getResult(), ElseSubPathNodeType),
 		SubPath:       subEngine,
 	}
 }
@@ -772,34 +777,6 @@ func NewFlowEngine() *FlowEngine {
 	return res
 }
 
-func (f *FlowEngine) Attach(parent *FlowEngine) *FlowEngine {
-	f.data = parent.data
-	f.result = parent.result
-	f.onFailFunc = parent.onFailFunc
-	f.onSuccessFunc = parent.onSuccessFunc
-	if len(f.nodes)!=0 {
-		for current := f.nodes[0];current!=nil;current=current.GetNext(){
-			current.SetResultPtr(parent.result)
-			current.SetData(parent.data)
-		}
-	}
-	return f
-}
-
-func (f *FlowEngine) AttachElse(parent *ElseFlowEngine) *FlowEngine {
-	f.data = *parent.data
-	f.result = parent.result
-	f.onFailFunc = parent.onFailFunc
-	f.onSuccessFunc = parent.onSuccessFunc
-	if len(f.nodes)!=0 {
-		for current := f.nodes[0];current!=nil;current=current.GetNext(){
-			current.SetResultPtr(parent.result)
-			current.SetData(*parent.data)
-		}
-	}
-	return f
-}
-
 func (f *FlowEngine) Prepare(input InputParam, prepareFunc ...IPrepareFunc) *FlowEngine {
 	node := NewPrepareNode(f.data, f.result, input, prepareFunc...)
 	if len(f.nodes) != 0 {
@@ -845,7 +822,7 @@ func (f *FlowEngine) If(condition IBoolFunc, functors ...ICallable) *ElseFlowEng
 	return NewElseFlowEngine(&f.data, f, f.result, &f.nodes)
 }
 
-func (f *FlowEngine) IfSubPath(condition IBoolFunc, subPath *FlowEngine) *ElseFlowEngine {
+func (f *FlowEngine) IfSubPath(condition IBoolFunc, subPath IFlowEngine) *ElseFlowEngine {
 	node := NewIfSubPathNode(condition, subPath, f)
 	if len(f.nodes) != 0 {
 		f.nodes[len(f.nodes)-1].SetNext(node)
@@ -918,6 +895,55 @@ func (f *FlowEngine) OnFail(functor IOnFailFunc) *FlowEngine {
 func (f *FlowEngine) OnSuccess(functor IOnFailFunc) *FlowEngine {
 	f.onSuccessFunc = functor
 	return f
+}
+
+func (f *FlowEngine) getData() *DataSet {
+	return f.data
+}
+
+func (f *FlowEngine) setData(data *DataSet) {
+	f.data = data
+}
+
+func (f *FlowEngine) getResult() **Result {
+	return f.result
+}
+
+func (f *FlowEngine) setResult(result **Result) {
+	f.result = result
+}
+
+func (f *FlowEngine) getOnFailFunc() IOnFailFunc {
+	return f.onFailFunc
+}
+
+func (f *FlowEngine) setOnFailFunc(function IOnFailFunc) {
+	f.onFailFunc = function
+}
+
+func (f *FlowEngine) getOnSuccessFunc() IOnSuccessFunc {
+	return f.onSuccessFunc
+}
+
+func (f *FlowEngine) setOnSuccessFunc(function IOnSuccessFunc) {
+	f.onSuccessFunc = function
+}
+
+func (f *FlowEngine) getNodes() []IBasicFlowNode {
+	return f.nodes
+}
+
+func (f *FlowEngine) attach(parent IFlowEngine) {
+	f.data = parent.getData()
+	f.result = parent.getResult()
+	f.onFailFunc = parent.getOnFailFunc()
+	f.onSuccessFunc = parent.getOnSuccessFunc()
+	if len(f.nodes)!=0 {
+		for current := f.nodes[0];current!=nil;current=current.GetNext(){
+			current.SetResultPtr(parent.getResult())
+			current.SetData(parent.getData())
+		}
+	}
 }
 
 //END FlowEngine
@@ -1002,8 +1028,8 @@ func (e *ElseFlowEngine) Else(functors ...ICallable) *FlowEngine {
 	return e.invoker
 }
 
-func (e *ElseFlowEngine) IfSubPath(condition IBoolFunc, subPath *FlowEngine) *ElseFlowEngine {
-	node := NewIfSubPathNodeInElse(condition, subPath, e)
+func (e *ElseFlowEngine) IfSubPath(condition IBoolFunc, subPath IFlowEngine) *ElseFlowEngine {
+	node := NewIfSubPathNode(condition, subPath, e)
 	if len(*e.nodes) != 0 {
 		(*e.nodes)[len(*e.nodes)-1].SetNext(node)
 	}
@@ -1011,14 +1037,14 @@ func (e *ElseFlowEngine) IfSubPath(condition IBoolFunc, subPath *FlowEngine) *El
 	return e
 }
 
-func (e *ElseFlowEngine) ElseIfSubPath(condition IBoolFunc, subPath *FlowEngine) *ElseFlowEngine {
+func (e *ElseFlowEngine) ElseIfSubPath(condition IBoolFunc, subPath IFlowEngine) *ElseFlowEngine {
 	node := NewElseIfSubPathNode(condition, subPath, e)
 	(*e.nodes)[len(*e.nodes)-1].SetNext(node)
 	*e.nodes = append(*e.nodes, node)
 	return e
 }
 
-func (e *ElseFlowEngine) ElseSubPath(subPath *FlowEngine) *FlowEngine {
+func (e *ElseFlowEngine) ElseSubPath(subPath IFlowEngine) *FlowEngine {
 	node := NewElseSubPathNode(subPath, e)
 	(*e.nodes)[len(*e.nodes)-1].SetNext(node)
 	*e.nodes = append(*e.nodes, node)
@@ -1089,6 +1115,61 @@ func (e *ElseFlowEngine) OnFail(functor IOnFailFunc) *ElseFlowEngine {
 func (e *ElseFlowEngine) OnSuccess(functor IOnFailFunc) *ElseFlowEngine {
 	e.onSuccessFunc = functor
 	return e
+}
+
+func (e *ElseFlowEngine) getData() *DataSet {
+	if e.data!=nil {
+		return *e.data
+	}
+	return nil
+}
+
+func (e *ElseFlowEngine) setData(data *DataSet) {
+	e.data = &data
+}
+
+func (e *ElseFlowEngine) getResult() **Result {
+	return e.result
+}
+
+func (e *ElseFlowEngine) setResult(result **Result) {
+	e.result = result
+}
+
+func (e *ElseFlowEngine) getOnFailFunc() IOnFailFunc {
+	return e.onFailFunc
+}
+
+func (e *ElseFlowEngine) setOnFailFunc(function IOnFailFunc) {
+	e.onFailFunc = function
+}
+
+func (e *ElseFlowEngine) getOnSuccessFunc() IOnSuccessFunc {
+	return e.onSuccessFunc
+}
+
+func (e *ElseFlowEngine) setOnSuccessFunc(function IOnSuccessFunc) {
+	e.onSuccessFunc = function
+}
+
+func (e *ElseFlowEngine) getNodes() []IBasicFlowNode {
+	if e.nodes!=nil {
+		return *e.nodes
+	}
+	return nil
+}
+
+func (e *ElseFlowEngine) attach(parent IFlowEngine) {
+	*e.data = parent.getData()
+	e.result = parent.getResult()
+	e.onFailFunc = parent.getOnFailFunc()
+	e.onSuccessFunc = parent.getOnSuccessFunc()
+	if len(*e.nodes)!=0 {
+		for current := (*e.nodes)[0];current!=nil;current=current.GetNext(){
+			current.SetResultPtr(parent.getResult())
+			current.SetData(parent.getData())
+		}
+	}
 }
 
 //END ElseFlowEngine

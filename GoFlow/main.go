@@ -94,7 +94,7 @@ func main() {
 	result := flow.Prepare(InputParam{},PrepareData).
 		Do(SimpleFunc1).
 		//Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6).
-		IfSubPath(CondFalse,NewFlow().Do(SimpleFunc1).Do(SimpleFunc2).If(CondTrue,SimpleFunc2).Else(SimpleFunc3)).
+		IfSubPath(CondFalse,NewFlow().Do(SimpleFunc1).Do(SimpleFunc2).If(CondTrue,SimpleFunc2)).
 		ElseSubPath(NewFlow().Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6)).
 		Wait()
 
