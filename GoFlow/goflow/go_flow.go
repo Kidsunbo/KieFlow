@@ -82,6 +82,7 @@ func (c *PanicHappened) Error() string {
 // BasicFlowNode Implementation
 type BasicFlowNode struct {
 	Functors     []ICallable
+
 	NodeType     NodeType
 	Next         IBasicFlowNode
 	Data         *_Data
@@ -206,12 +207,11 @@ func (i *IfNode) ImplTask() *_Result {
 				return result
 			}
 		}
-	}
-
-	current := i.Next
-	for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
-		current.SetShouldSkip(true)
-		current = current.GetNext()
+		current := i.Next
+		for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
+			current.SetShouldSkip(true)
+			current = current.GetNext()
+		}
 	}
 
 	return i.GetParentResult()
@@ -305,13 +305,14 @@ func (e *ElseIfNode) ImplTask() *_Result {
 				return result
 			}
 		}
+
+		current := e.Next
+		for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
+			current.SetShouldSkip(true)
+			current = current.GetNext()
+		}
 	}
 
-	current := e.Next
-	for current != nil && (current.GetNodeType() == ElseIfNodeType || current.GetNodeType() == ElseNodeType) {
-		current.SetShouldSkip(true)
-		current = current.GetNext()
-	}
 
 	return e.GetParentResult()
 }
