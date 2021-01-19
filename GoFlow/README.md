@@ -150,7 +150,7 @@ _ = flow.Prepare(InputParam{}, PrepareData).
 |Global End Logger| `SetGlobalEndLogger`| Set the end logger to all the nodes which do not have a end logger |
 |On Success| `OnSuccess`| A function that will run only if the flow exits successfully. It must follow the interface `IOnSuccessFunc` |
 |On Fail| `OnFail`| A function that will run only if the flow fails to exit successfully. It must follow the interface `IOnFailFunc` |
-|Wait The Result| `Wait` | Run all the registered nodes and give out result to the caller |
+|Wait The Result| `Wait` | Run all the registered nodes and give out result to the caller. **The result will not be set to the flow only if it's not nil and error or non-zero status code generated. So if you want to send data out of the flow by result, `OnSuccess` should help**  |
 
 # Flaw
 
