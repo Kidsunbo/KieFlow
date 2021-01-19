@@ -114,7 +114,7 @@ _ = NewFlow().
 
 ## Flow with sub-flow
 ```go
-_ := flow.Prepare(InputParam{}, PrepareData).
+_ = flow.Prepare(InputParam{}, PrepareData).
     Do(SimpleFunc1).
     Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6).
     IfSubPath(CondTrue,
