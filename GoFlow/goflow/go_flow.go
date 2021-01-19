@@ -43,7 +43,8 @@ type IFlowEngine interface {
 	getOnSuccessFunc() IOnSuccessFunc
 	setOnSuccessFunc(function IOnSuccessFunc)
 	getNodes() []IBasicFlowNode
-	attach(engine IFlowEngine)
+	Attach(engine IFlowEngine)
+	Inherit(engine IFlowEngine)
 	Wait() *_Result
 }
 
@@ -275,7 +276,7 @@ type IfSubPathNode struct {
 }
 
 func NewIfSubPathNode(condition IBoolFunc, subEngine IFlowEngine, parent IFlowEngine) *IfSubPathNode {
-	subEngine.attach(parent)
+	subEngine.Attach(parent)
 	return &IfSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.getData(), subEngine.getResult(), IfSubPathNodeType),
 		Condition:     condition,
@@ -362,7 +363,7 @@ type ElseIfSubPathNode struct {
 }
 
 func NewElseIfSubPathNode(condition IBoolFunc, subEngine IFlowEngine, parent IFlowEngine) *ElseIfSubPathNode {
-	subEngine.attach(parent)
+	subEngine.Attach(parent)
 	return &ElseIfSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.getData(), subEngine.getResult(), ElseIfSubPathNodeType),
 		Condition:     condition,
@@ -446,7 +447,7 @@ type ElseSubPathNode struct {
 }
 
 func NewElseSubPathNode(subEngine IFlowEngine, parent IFlowEngine) *ElseSubPathNode {
-	subEngine.attach(parent)
+	subEngine.Attach(parent)
 	return &ElseSubPathNode{
 		BasicFlowNode: NewBasicFlowNode(subEngine.getData(), subEngine.getResult(), ElseSubPathNodeType),
 		SubPath:       subEngine,
@@ -992,17 +993,21 @@ func (f *FlowEngine) getNodes() []IBasicFlowNode {
 	return f.nodes
 }
 
-func (f *FlowEngine) attach(parent IFlowEngine) {
+func (f *FlowEngine) Attach(parent IFlowEngine) {
 	f.data = parent.getData()
 	f.result = parent.getResult()
-	f.onFailFunc = parent.getOnFailFunc()
-	f.onSuccessFunc = parent.getOnSuccessFunc()
 	if len(f.nodes) != 0 {
 		for current := f.nodes[0]; current != nil; current = current.GetNext() {
 			current.SetResultPtr(parent.getResult())
 			current.SetData(parent.getData())
 		}
 	}
+}
+
+func (f *FlowEngine) Inherit(parent IFlowEngine) {
+	f.Attach(parent)
+	f.onFailFunc = parent.getOnFailFunc()
+	f.onSuccessFunc = parent.getOnSuccessFunc()
 }
 
 //END FlowEngine
@@ -1218,17 +1223,21 @@ func (e *ElseFlowEngine) getNodes() []IBasicFlowNode {
 	return nil
 }
 
-func (e *ElseFlowEngine) attach(parent IFlowEngine) {
+func (e *ElseFlowEngine) Attach(parent IFlowEngine) {
 	*e.data = parent.getData()
 	e.result = parent.getResult()
-	e.onFailFunc = parent.getOnFailFunc()
-	e.onSuccessFunc = parent.getOnSuccessFunc()
 	if len(*e.nodes) != 0 {
 		for current := (*e.nodes)[0]; current != nil; current = current.GetNext() {
 			current.SetResultPtr(parent.getResult())
 			current.SetData(parent.getData())
 		}
 	}
+}
+
+func (e *ElseFlowEngine) Inherit(parent IFlowEngine) {
+	e.Attach(parent)
+	e.onFailFunc = parent.getOnFailFunc()
+	e.onSuccessFunc = parent.getOnSuccessFunc()
 }
 
 //END ElseFlowEngine
