@@ -49,56 +49,56 @@ func EndLogger(funcName string) func(int64) INodeEndLogger {
 	}
 }
 
-func CondTrue(data *DataSet)bool{
+func CondTrue(data *DataSet) bool {
 	return true
 }
 
-func CondFalse(data *DataSet)bool{
+func CondFalse(data *DataSet) bool {
 	return false
 }
 
-func SimpleFunc1(data* DataSet)*Result{
-	fmt.Println("SimpleFunc1, data=",data)
+func SimpleFunc1(data *DataSet) *Result {
+	fmt.Println("SimpleFunc1, data=", data)
 	return nil
 }
 
-func SimpleFunc2(data* DataSet)*Result{
-	fmt.Println("SimpleFunc2, data=",data)
+func SimpleFunc2(data *DataSet) *Result {
+	fmt.Println("SimpleFunc2, data=", data)
 	return nil
 }
 
-func SimpleFunc3(data* DataSet)*Result{
-	fmt.Println("SimpleFunc3, data=",data)
+func SimpleFunc3(data *DataSet) *Result {
+	fmt.Println("SimpleFunc3, data=", data)
 	return nil
 }
 
-func SimpleFunc4(data* DataSet)*Result{
-	fmt.Println("SimpleFunc4, data=",data)
+func SimpleFunc4(data *DataSet) *Result {
+	fmt.Println("SimpleFunc4, data=", data)
 	return nil
 }
 
-func SimpleFunc5(data* DataSet)*Result{
-	fmt.Println("SimpleFunc5, data=",data)
+func SimpleFunc5(data *DataSet) *Result {
+	fmt.Println("SimpleFunc5, data=", data)
 	return nil
 }
 
-func SimpleFunc6(data* DataSet)*Result{
-	fmt.Println("SimpleFunc6, data=",data)
+func SimpleFunc6(data *DataSet) *Result {
+	fmt.Println("SimpleFunc6, data=", data)
 	result := new(Result)
 	result.StatusCode = 1
 	return result
 }
 
 func main() {
-	flow :=NewFlow()
-	result := flow.Prepare(InputParam{},PrepareData).
+	flow := NewFlow()
+	result := flow.Prepare(InputParam{}, PrepareData).
 		Do(SimpleFunc1).
 		//Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6).
 		IfSubPath(CondTrue,
-			NewFlow().Do(Fun2WithData).Do(Fun1WithData).IfSubPath(CondTrue,NewFlow().Do(SimpleFunc6).If(CondTrue,Fun2WithData).
+			NewFlow().Do(Fun2WithData).Do(Fun1WithData).IfSubPath(CondTrue, NewFlow().Do(SimpleFunc6).If(CondTrue, Fun2WithData).
 				Else(SimpleFunc4).Do(SimpleFunc5)).
-			ElseIfSubPath(CondTrue, NewFlow().Do(SimpleFunc6).If(CondTrue,Fun2WithData)).
-			Else(SimpleFunc4).Do(SimpleFunc5)).
+				ElseIfSubPath(CondTrue, NewFlow().Do(SimpleFunc6).If(CondTrue, Fun2WithData)).
+				Else(SimpleFunc4).Do(SimpleFunc5)).
 		ElseSubPath(NewFlow().Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6)).
 		Do(SimpleFunc5).
 		Wait()

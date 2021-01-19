@@ -34,9 +34,9 @@ const (
 )
 
 type IFlowEngine interface {
-	getData()*_Data
+	getData() *_Data
 	setData(data *_Data)
-	getResult()**_Result
+	getResult() **_Result
 	setResult(result **_Result)
 	getOnFailFunc() IOnFailFunc
 	setOnFailFunc(function IOnFailFunc)
@@ -44,7 +44,7 @@ type IFlowEngine interface {
 	setOnSuccessFunc(function IOnSuccessFunc)
 	getNodes() []IBasicFlowNode
 	attach(engine IFlowEngine)
-	Wait()*_Result
+	Wait() *_Result
 }
 
 type IBasicFlowNode interface {
@@ -192,11 +192,11 @@ func (b *BasicFlowNode) GetEndLogger() INodeEndLogger {
 	return b.EndLogger
 }
 
-func (b *BasicFlowNode) SetData(data *_Data){
+func (b *BasicFlowNode) SetData(data *_Data) {
 	b.Data = data
 }
 
-func (b *BasicFlowNode) SetResultPtr(result **_Result){
+func (b *BasicFlowNode) SetResultPtr(result **_Result) {
 	b.parentResult = result
 }
 
@@ -332,8 +332,8 @@ func (i *IfSubPathNode) Run() {
 
 }
 
-func (i *IfSubPathNode) SetData(data *_Data){
-	if i.SubPath!=nil {
+func (i *IfSubPathNode) SetData(data *_Data) {
+	if i.SubPath != nil {
 		if len(i.SubPath.getNodes()) != 0 {
 			for current := i.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
 				current.SetData(data)
@@ -342,8 +342,8 @@ func (i *IfSubPathNode) SetData(data *_Data){
 	}
 }
 
-func (i *IfSubPathNode) SetResultPtr(result **_Result){
-	if i.SubPath!=nil {
+func (i *IfSubPathNode) SetResultPtr(result **_Result) {
+	if i.SubPath != nil {
 		if len(i.SubPath.getNodes()) != 0 {
 			for current := i.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
 				current.SetResultPtr(result)
@@ -417,8 +417,8 @@ func (e *ElseIfSubPathNode) Run() {
 	}
 }
 
-func (e *ElseIfSubPathNode) SetData(data *_Data){
-	if e.SubPath!=nil {
+func (e *ElseIfSubPathNode) SetData(data *_Data) {
+	if e.SubPath != nil {
 		if len(e.SubPath.getNodes()) != 0 {
 			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
 				current.SetData(data)
@@ -427,8 +427,8 @@ func (e *ElseIfSubPathNode) SetData(data *_Data){
 	}
 }
 
-func (e *ElseIfSubPathNode) SetResultPtr(result **_Result){
-	if e.SubPath!=nil {
+func (e *ElseIfSubPathNode) SetResultPtr(result **_Result) {
+	if e.SubPath != nil {
 		if len(e.SubPath.getNodes()) != 0 {
 			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
 				current.SetResultPtr(result)
@@ -481,8 +481,8 @@ func (e *ElseSubPathNode) Run() {
 	}
 }
 
-func (e *ElseSubPathNode) SetData(data *_Data){
-	if e.SubPath!=nil {
+func (e *ElseSubPathNode) SetData(data *_Data) {
+	if e.SubPath != nil {
 		if len(e.SubPath.getNodes()) != 0 {
 			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
 				current.SetData(data)
@@ -491,8 +491,8 @@ func (e *ElseSubPathNode) SetData(data *_Data){
 	}
 }
 
-func (e *ElseSubPathNode) SetResultPtr(result **_Result){
-	if e.SubPath!=nil {
+func (e *ElseSubPathNode) SetResultPtr(result **_Result) {
+	if e.SubPath != nil {
 		if len(e.SubPath.getNodes()) != 0 {
 			for current := e.SubPath.getNodes()[0]; current != nil; current = current.GetNext() {
 				current.SetResultPtr(result)
@@ -997,8 +997,8 @@ func (f *FlowEngine) attach(parent IFlowEngine) {
 	f.result = parent.getResult()
 	f.onFailFunc = parent.getOnFailFunc()
 	f.onSuccessFunc = parent.getOnSuccessFunc()
-	if len(f.nodes)!=0 {
-		for current := f.nodes[0];current!=nil;current=current.GetNext(){
+	if len(f.nodes) != 0 {
+		for current := f.nodes[0]; current != nil; current = current.GetNext() {
 			current.SetResultPtr(parent.getResult())
 			current.SetData(parent.getData())
 		}
@@ -1177,7 +1177,7 @@ func (e *ElseFlowEngine) OnSuccess(functor IOnSuccessFunc) *ElseFlowEngine {
 }
 
 func (e *ElseFlowEngine) getData() *_Data {
-	if e.data!=nil {
+	if e.data != nil {
 		return *e.data
 	}
 	return nil
@@ -1212,7 +1212,7 @@ func (e *ElseFlowEngine) setOnSuccessFunc(function IOnSuccessFunc) {
 }
 
 func (e *ElseFlowEngine) getNodes() []IBasicFlowNode {
-	if e.nodes!=nil {
+	if e.nodes != nil {
 		return *e.nodes
 	}
 	return nil
@@ -1223,8 +1223,8 @@ func (e *ElseFlowEngine) attach(parent IFlowEngine) {
 	e.result = parent.getResult()
 	e.onFailFunc = parent.getOnFailFunc()
 	e.onSuccessFunc = parent.getOnSuccessFunc()
-	if len(*e.nodes)!=0 {
-		for current := (*e.nodes)[0];current!=nil;current=current.GetNext(){
+	if len(*e.nodes) != 0 {
+		for current := (*e.nodes)[0]; current != nil; current = current.GetNext() {
 			current.SetResultPtr(parent.getResult())
 			current.SetData(parent.getData())
 		}
