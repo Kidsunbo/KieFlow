@@ -951,7 +951,7 @@ func (f *FlowEngine) OnFail(functor IOnFailFunc) *FlowEngine {
 	return f
 }
 
-func (f *FlowEngine) OnSuccess(functor IOnFailFunc) *FlowEngine {
+func (f *FlowEngine) OnSuccess(functor IOnSuccessFunc) *FlowEngine {
 	f.onSuccessFunc = functor
 	return f
 }
@@ -1171,7 +1171,7 @@ func (e *ElseFlowEngine) OnFail(functor IOnFailFunc) *ElseFlowEngine {
 	return e
 }
 
-func (e *ElseFlowEngine) OnSuccess(functor IOnFailFunc) *ElseFlowEngine {
+func (e *ElseFlowEngine) OnSuccess(functor IOnSuccessFunc) *ElseFlowEngine {
 	e.onSuccessFunc = functor
 	return e
 }
