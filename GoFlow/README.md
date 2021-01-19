@@ -112,7 +112,7 @@ _ = NewFlow().
     Wait()
 ```
 
-## Flow with sub-flow
+## Flow With Sub-Flow
 ```go
 _ = flow.Prepare(InputParam{}, PrepareData).
     Do(SimpleFunc1).
