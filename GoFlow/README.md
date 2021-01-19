@@ -152,7 +152,9 @@ _ = flow.Prepare(InputParam{}, PrepareData).
 |On Fail| `OnFail`| A function that will run only if the flow fails to exit successfully. It must follow the interface `IOnFailFunc` |
 |Wait The Result| `Wait` | Run all the registered nodes and give out result to the caller |
 
+# Flaw
 
+`switch` is missing which is useful but replaceable. Use `If` or wrap the whole `switch` part into a function in practice.
 
 
 # Thanks
