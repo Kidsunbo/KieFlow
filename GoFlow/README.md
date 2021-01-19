@@ -110,8 +110,50 @@ _ = NewFlow().
     OnSuccess(OnSuccessHandle).
     OnFail(OnFailHandle).
     Wait()
-
 ```
+
+## Flow with sub-flow
+```go
+_ := flow.Prepare(InputParam{}, PrepareData).
+    Do(SimpleFunc1).
+    Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6).
+    IfSubPath(CondTrue,
+        NewFlow().Do(Fun2WithData).Do(Fun1WithData).IfSubPath(CondFalse, 
+        	NewFlow().Do(SimpleFunc4).If(CondTrue, Fun2WithData).Else(SimpleFunc4).Do(SimpleFunc5)).
+        ElseIfSubPath(CondTrue, NewFlow().Do(SimpleFunc5).If(CondTrue, Fun2WithData)).
+        Else(SimpleFunc4).Do(SimpleFunc5)).
+    ElseSubPath(NewFlow().Do(SimpleFunc4).Do(SimpleFunc5).Do(SimpleFunc6)).
+    Do(SimpleFunc5).
+    Wait()
+```
+
+# API
+
+| Name | Signature|  Note|
+|------|:------:|--------|
+|Normal Flow| `Do`|Register some functors to run later. This is the most common API in GoFlow|
+|If Flow| `If` |Register the condition and some functors, it's the same as the if expression but in functional form|
+|ElseIf Flow| `ElseIf`| The same with `If`, but it only appears behind `If` and `ElseIf`|
+|Else Flow| `Else`| The same with `ElseIf` but it does not need condition|
+|SubPath If Flow| `IfSubPath` | It's exactly the same with `If`, while it accepts a sub-flow as parameters. It will `Attach` the data from the parent flow. Notice that he logger will not be inherited|
+|SubPath ElseIf Flow| `ElseIfSubPath` | It's exactly the same with `Elseif` while a sub-flow is expected. The same notation of `IfSubPath` is still applied here|
+|SubPath Else Flow| `ElseSubPath` |It's exactly the same with `Else` while a sub-flow is expected. The same notation of `IfSubPath` is still applied here|
+|For Flow| `For` | Register some functors and run them for several times. The first parameter is the times that user expects these functors run |
+|Parallel Flow| `Parallel` | Run some functors in parallel. Only if all the functors finish with or without success, this node will end and return the result if there is any |
+|Prepare Flow| `Prepare` | Given some input parameters and a prepare function follows the interface `IPrepareFunc`. GoFlow will use this function to prepare all the data and stored in the flow.
+|Attach Function| `Attach`| Attach the result and data from flow A to flow B. All the change to either of A and B will be seen by the other flow |
+|Inherit Function| `Inherit` | Attach the result and data from another flow like `Attach` does, and use the same `OnSuccess` and `OnFail` handler of that flow|
+|Note Function| `SetNote` | Set the not to a certain node and the note can be accessed from Logger|
+|Begin Logger| `SetBeginLogger`| Set the begin logger to a certain node. The parameter must implement `INodeBeginLogger` interface |
+|End Logger| `SetEndLogger`| Set the end logger to a certain node. The parameter must implement `INodeEndLogger` interface |
+|Global Begin Logger| `SetGlobalBeginLogger`| Set the begin logger to all the nodes which do not have a begin logger |
+|Global End Logger| `SetGlobalEndLogger`| Set the end logger to all the nodes which do not have a end logger |
+|On Success| `OnSuccess`| A function that will run only if the flow exits successfully. It must follow the interface `IOnSuccessFunc` |
+|On Fail| `OnFail`| A function that will run only if the flow fails to exit successfully. It must follow the interface `IOnFailFunc` |
+|Wait The Result| `Wait` | Run all the registered nodes and give out result to the caller |
+
+
+
 
 # Thanks
 
