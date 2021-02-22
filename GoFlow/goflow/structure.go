@@ -7,7 +7,8 @@ import "context"
 // [IMPORTANT] Notice that even though _Result can be replace with other type, the Err, StatusCode and StatusMsg must be provided
 
 type _Data struct {
-	Ctx context.Context
+	Ctx context.Context  `json:"-"`
+	FunctionName string  `json:"-"`
 }
 
 type _Result struct {
@@ -17,7 +18,8 @@ type _Result struct {
 }
 
 type _PrepareInput struct {
-	Ctx context.Context
+	Ctx context.Context `json:"-"`
+	FunctionName string `json:"-"`
 }
 
 //************************DEFINE YOUR STRUCTURE ABOVE****************************//
