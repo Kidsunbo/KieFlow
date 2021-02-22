@@ -6,7 +6,6 @@
 #define CPPFLOW_CPPFLOW_H
 
 #include <memory>
-#include <list>
 #include <functional>
 #include <string>
 #include <vector>
@@ -50,7 +49,7 @@ template<typename Data, typename Result, std::enable_if_t<HasStatusCodeV<Result>
 class CPPFlow;
 
 template<typename Data, typename Result>
-class BasicFlowNode {
+class BasicFlowNode{
     friend class CPPFlow<Data,Result>;
 
 protected:
@@ -97,7 +96,7 @@ protected:
 };
 
 template<typename Data, typename Result>
-class IfNode:public BasicFlowNode<Data,Result>{
+class IfNode final:public BasicFlowNode<Data,Result>{
     friend class CPPFlow<Data,Result>;
 
 private:
@@ -123,12 +122,39 @@ protected:
     }
 
     std::shared_ptr<Result> implTask() override {
-        for(auto f:functors){
-            f(nullptr);
+        if(this->condition == nullptr){
+            return std::make_shared<std::shared_ptr<Result>>(std::make_shared<Result>());
         }
-        return std::shared_ptr<Result>();
+
+        if(this->condition(this->data)) {
+            if(this->beginLogger!=nullptr){
+                this->beginLogger(this->note,this->data);
+            }
+
+            for (auto f:functors) {
+                auto res = f(nullptr);
+                if(res != nullptr && res->statusCode !=0 ){
+                    if(this->endLogger!= nullptr){
+                        this->endLogger(this->note,this->data,res);
+                    }
+                    return res;
+                }
+            }
+
+            for(auto current = this->next;current!=nullptr && (current->nodeType == NodeType::ElseIfNode || current->nodeType == NodeType::ElseNode);current = current->next){
+                current->shouldSkip = true;
+            }
+            if(this->endLogger!= nullptr){
+                this->endLogger(this->note,this->data,this->getParentResult());
+            }
+        }
+        return this->getParentResult();
     }
 };
+
+
+
+
 
 
 template<typename Data, typename Result, std::enable_if_t<HasStatusCodeV<Result>>*>
