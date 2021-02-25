@@ -22,4 +22,8 @@ type _PrepareInput struct {
 	FunctionName string `json:"-"`
 }
 
+func InitStructure(data *_Data){
+	//Initialize your data here if needed
+}
+
 //************************DEFINE YOUR STRUCTURE ABOVE****************************//

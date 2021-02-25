@@ -70,7 +70,9 @@ type IBasicFlowNode interface {
 type Flow = FlowEngine
 
 func NewFlow() *Flow {
-	return NewFlowEngine()
+	res := NewFlowEngine()
+	InitStructure(res.data)
+	return res
 }
 
 //Errors
